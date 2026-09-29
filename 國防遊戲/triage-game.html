@@ -70,7 +70,7 @@ h1 .strip i{display:block;height:10px;flex:1;border-radius:2px}
 /* game */
 /* 遊戲畫面：剛好一個螢幕高，不捲動 */
 #game.active{height:100vh;height:100dvh;min-height:0;overflow:hidden;
-  padding-top:calc(var(--sat) + 10px);padding-bottom:calc(var(--sab) + 10px);
+  padding-top:calc(var(--sat) + 10px);padding-bottom:calc(var(--sab) + var(--peek) + 6px);
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 body.playing{overflow:hidden;position:fixed;inset:0}
 .hud{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;flex:none}
@@ -79,9 +79,6 @@ body.playing{overflow:hidden;position:fixed;inset:0}
 .hud .v{font-family:var(--num);font-weight:800;font-size:1.7rem;line-height:1}
 .hud .v.warn{color:#ff8a80;animation:pulse .5s ease-in-out infinite alternate}
 @keyframes pulse{to{transform:scale(1.12)}}
-.book-btn{flex:none;min-width:48px;height:48px;border:none;border-radius:12px;background:var(--tag);color:#7a2a22;
-  font-weight:900;font-size:.8rem;line-height:1.1;padding:4px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.book-btn span{font-size:1.15rem}
 .timer{height:6px;background:var(--field-2);border-radius:3px;overflow:hidden;margin-bottom:8px;flex:none}
 .timer i{display:block;height:100%;width:100%;background:var(--tag);transform-origin:left}
 .timer i.low{background:var(--red)}
@@ -150,35 +147,47 @@ body.playing{overflow:hidden;position:fixed;inset:0}
 .b-green{background:var(--green)} .b-black{background:var(--black);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
 /* 矮螢幕（小手機、網址列展開）再壓縮 */
 @media (max-height:640px){
-  .hud .v{font-size:1.4rem}.hud .k{font-size:.7rem}.book-btn{height:42px}
+  .hud .v{font-size:1.4rem}.hud .k{font-size:.7rem}
   .shout{min-height:42px;padding:7px;font-size:.92rem;margin-bottom:6px}
   .bubble{font-size:.88rem;padding:6px 10px;min-height:3.3em;margin:8px 8px 2px}
   .log{padding:5px 10px 6px}.log dl{font-size:.82rem;line-height:1.35}
   .btns button{min-height:52px;font-size:.98rem}
 }
 
-/* rulebook: a page that peeks from the right edge and slides to the front */
+/* 檢傷手冊：平常只從畫面最下緣露出一小截「把手」，上滑或點一下就拉出來 */
+:root{--peek:34px}
 .book-shade{position:fixed;inset:0;background:rgba(10,12,8,.45);z-index:11;opacity:0;pointer-events:none;transition:opacity .3s}
 .book-shade.open{opacity:1;pointer-events:auto}
 .book{
-  position:fixed;left:0;right:0;bottom:0;margin:0 auto;width:100%;max-width:600px;max-height:88dvh;z-index:12;
-  display:flex;flex-direction:column;visibility:hidden;
-  transform:translateY(105%);transition:transform .32s cubic-bezier(.3,.7,.2,1),visibility 0s .32s;
+  position:fixed;left:0;right:0;bottom:0;margin:0 auto;width:100%;max-width:600px;height:86vh;height:86dvh;z-index:12;
+  display:none;flex-direction:column;
+  transform:translateY(calc(100% - var(--peek) - var(--sab)));transition:transform .34s cubic-bezier(.3,.7,.2,1);
   background:var(--tag);color:var(--tag-ink);
   background-image:repeating-linear-gradient(transparent 0 29px,rgba(107,96,74,.18) 29px 30px);
-  border-radius:18px 18px 0 0;box-shadow:0 -12px 34px rgba(0,0,0,.45);
+  border-radius:16px 16px 0 0;box-shadow:0 -3px 12px rgba(0,0,0,.28);
 }
-.book.open{transform:translateY(0);visibility:visible;transition:transform .32s cubic-bezier(.3,.7,.2,1)}
-@media (prefers-reduced-motion:reduce){.book{transition:none}}
-.book-grip{flex:none;height:22px;display:grid;place-items:center;touch-action:none}
-.book-grip::before{content:"";width:44px;height:5px;border-radius:3px;background:var(--tag-edge)}
+body.playing .book{display:flex}
+.book.open{transform:translateY(0);box-shadow:0 -12px 34px rgba(0,0,0,.45)}
+.book.hint{animation:hint 1.3s ease-in-out 2}
+@keyframes hint{0%,60%,100%{margin-bottom:0}30%{margin-bottom:10px}}
+@media (prefers-reduced-motion:reduce){.book{transition:none}.book.hint{animation:none}}
+.book-grip{flex:none;height:var(--peek);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  background:var(--tag);border-radius:16px 16px 0 0;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none;color:var(--tag-muted);font-size:.72rem;font-weight:700;letter-spacing:.12em}
+.book-grip::before{content:"";width:40px;height:4px;border-radius:2px;background:var(--tag-edge);flex:none;transition:width .2s}
+.book-grip .lbl{display:flex;align-items:center;gap:5px;line-height:1;transition:opacity .2s}
+.book-grip .lbl svg{width:10px;height:10px;transition:transform .34s}
+.book.open .book-grip .lbl{opacity:0}
+.book.open .book-grip::before{width:52px}
+.book-grip:focus{outline:none}
+.book-grip:focus-visible::before{background:var(--red)}
+.book:not(.open) .book-page{visibility:hidden}
 .book-page{
   flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
   padding:0 calc(18px + var(--sar)) calc(var(--sab) + 20px) calc(18px + var(--sal));
 }
 .book-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .book-head h2{margin:0;font-size:1.4rem;font-weight:900}
-.book-close{border:none;background:#7a2a22;color:#f3e6c8;border-radius:10px;padding:0 16px;min-height:44px;font-weight:700;font-size:1rem}
+.book-head .book-close{border:none;background:#7a2a22;color:#f3e6c8;border-radius:10px;padding:0 16px;min-height:44px;font-weight:700;font-size:1rem}
 .book .sub2{color:var(--tag-muted);font-size:.85rem;margin:0 0 14px}
 .flow{list-style:none;margin:0 0 18px;padding:0;counter-reset:s}
 .flow li{position:relative;font-size:1.05rem;padding:12px 14px 12px 46px;margin-bottom:8px;background:rgba(255,255,255,.45);border-radius:8px;line-height:1.6;counter-increment:s}
@@ -276,7 +285,6 @@ body.playing{overflow:hidden;position:fixed;inset:0}
     <div><div class="k">傷患</div><div class="v" id="prog">1/15</div></div>
     <div style="text-align:center"><div class="k">剩餘秒數</div><div class="v" id="sec">20</div></div>
     <div style="text-align:right"><div class="k">分數</div><div class="v" id="score">0</div></div>
-    <button class="book-btn" id="bookTab" aria-expanded="false" aria-controls="book"><span>📖</span>手冊</button>
   </div>
   <div class="timer"><i id="bar"></i></div>
 
@@ -322,7 +330,7 @@ body.playing{overflow:hidden;position:fixed;inset:0}
 
 <div class="book-shade" id="bookShade"></div>
 <aside class="book" id="book" aria-label="檢傷手冊">
-  <div class="book-grip" id="bookGrip"></div>
+  <div class="book-grip" id="bookTab" role="button" tabindex="0" aria-expanded="false" aria-controls="bookPage" aria-label="檢傷手冊（上滑或點一下打開）"><span class="lbl"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 7 L5 3 L9 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>檢傷手冊</span></div>
   <div class="book-page" id="bookPage">
     <div class="book-head">
       <h2>START 檢傷手冊</h2>
@@ -529,7 +537,8 @@ function book(open){
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function say(me,them){$("bubble").innerHTML=(me?`<div class="me">你：${me}</div>`:"")+(them||"")}
 
-function startGame(){deck=shuffle(CASES);idx=0;score=0;right=0;mistakes=[];$("score").textContent=0;show("game");deal()}
+let hinted=false;
+function startGame(){if(!hinted){hinted=true;setTimeout(()=>$("book").classList.add("hint"),900)}deck=shuffle(CASES);idx=0;score=0;right=0;mistakes=[];$("score").textContent=0;show("game");deal()}
 
 function deal(){
   cur=deck[idx];locked=false;done=new Set();
@@ -711,12 +720,20 @@ document.addEventListener("keydown",e=>{
   const m={ArrowRight:"red",ArrowLeft:"green",ArrowUp:"yellow",ArrowDown:"black"}[e.key];
   if(m){e.preventDefault();answer(m)}
 });
-$("bookTab").onclick=()=>book(!$("book").classList.contains("open"));$("bookShade").onclick=()=>book(false);$("bookClose").onclick=()=>book(false);
-/* 手冊：拉住上方把手往下滑即可關閉 */
-(()=>{const g=$("bookGrip"),b=$("book");let y0=null;
-  g.addEventListener("pointerdown",e=>{y0=e.clientY;g.setPointerCapture(e.pointerId);b.style.transition="none"});
-  g.addEventListener("pointermove",e=>{if(y0===null)return;const dy=Math.max(0,e.clientY-y0);b.style.transform=`translateY(${dy}px)`});
-  const end=e=>{if(y0===null)return;const dy=e.clientY-y0;y0=null;b.style.transition="";b.style.transform="";if(dy>80)book(false)};
+$("bookShade").onclick=()=>book(false);$("bookClose").onclick=()=>book(false);
+$("bookTab").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();book(!$("book").classList.contains("open"))}});
+/* 手冊把手：點一下切換；往上拉打開、往下拉關閉，拖曳時跟著手指 */
+(()=>{const g=$("bookTab"),b=$("book");let y0=null,base=0,dy=0;
+  g.addEventListener("pointerdown",e=>{if(locked&&!b.classList.contains("open"))return;
+    y0=e.clientY;dy=0;
+    base=b.classList.contains("open")?0:b.getBoundingClientRect().top-(innerHeight-b.offsetHeight);
+    g.setPointerCapture(e.pointerId);b.style.transition="none";b.classList.remove("hint")});
+  g.addEventListener("pointermove",e=>{if(y0===null)return;dy=e.clientY-y0;
+    b.style.transform=`translateY(${Math.min(Math.max(0,base+dy),b.offsetHeight)}px)`;
+    $("bookShade").style.opacity=Math.max(0,Math.min(1,1-(base+dy)/b.offsetHeight))});
+  const end=()=>{if(y0===null)return;y0=null;b.style.transition="";b.style.transform="";$("bookShade").style.opacity="";
+    const open=b.classList.contains("open");
+    if(Math.abs(dy)<8)book(!open);else if(!open&&dy<-40)book(true);else if(open&&dy>60)book(false);else book(open)};
   g.addEventListener("pointerup",end);g.addEventListener("pointercancel",end);
 })();
 $("go").onclick=startGame;$("again").onclick=startGame;$("next").onclick=next;
