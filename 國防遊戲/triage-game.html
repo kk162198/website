@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3a4130">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="檢傷分類">
+<meta name="format-detection" content="telephone=no">
 <title>檢傷分類：滑動救援</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,25 +21,29 @@
   --red:#c8302a; --yellow:#e2b21c; --green:#3f8f46; --black:#1c1c1c;
   --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
   --num:"Barlow Condensed","Arial Narrow",var(--sans);
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px); --sar:env(safe-area-inset-right,0px);
   box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px);
-  padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){ --field:#252a1e; --field-2:#1b1f16; --tag:#e6dabb; --ground:#57534a; --ground-2:#4a463e; }
 }
 :root[data-theme="dark"]{ --field:#252a1e; --field-2:#1b1f16; --tag:#e6dabb; --ground:#57534a; --ground-2:#4a463e; }
 *,*::before,*::after{box-sizing:inherit}
-html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+html{height:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%;overscroll-behavior:none}
 body{
   margin:0;min-height:100%;font-family:var(--sans);color:var(--ink-on-field);
   background:var(--field);
   background-image:repeating-linear-gradient(45deg,transparent 0 22px,rgba(0,0,0,.05) 22px 23px);
-  -webkit-tap-highlight-color:transparent;
+  -webkit-tap-highlight-color:transparent;overscroll-behavior:none;
 }
-button{font-family:inherit;cursor:pointer}
+button{font-family:inherit;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;transition:transform .08s,filter .08s}
+button:active{transform:scale(.96);filter:brightness(.92)}
+button:focus{outline:none}
 button:focus-visible,[tabindex]:focus-visible{outline:3px solid #fff;outline-offset:3px}
-.screen{display:none;max-width:600px;margin:0 auto;padding:18px 16px 26px;min-height:100vh;min-height:100dvh}
+.screen{display:none;max-width:600px;margin:0 auto;
+  padding:calc(var(--sat) + 18px) calc(var(--sar) + 16px) calc(var(--sab) + 20px) calc(var(--sal) + 16px);
+  min-height:100vh;min-height:100dvh}
 .screen.active{display:flex;flex-direction:column}
 .dot{display:inline-block;width:.8em;height:.8em;border-radius:50%;vertical-align:-.05em;margin:0 .2em;border:1px solid rgba(255,255,255,.35)}
 
@@ -49,21 +59,38 @@ h1 .strip i{display:block;height:10px;flex:1;border-radius:2px}
 .legend{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
 .legend div{display:flex;align-items:center;gap:10px;background:var(--field-2);padding:10px 12px;border-radius:8px;font-size:.95rem}
 .legend b{font-family:var(--num);font-size:1.5rem;width:1.3em;text-align:center}
-.primary{background:var(--tag);color:var(--tag-ink);border:none;border-radius:10px;font-size:1.15rem;font-weight:700;padding:16px;width:100%;margin-top:auto}
-.note{font-size:.8rem;color:var(--muted-on-field);margin-top:12px;line-height:1.6}
+.primary{background:var(--tag);color:var(--tag-ink);border:none;border-radius:12px;font-size:1.15rem;font-weight:700;padding:16px;width:100%;min-height:56px;margin-top:auto}
+.note{font-size:.8rem;color:var(--muted-on-field);margin:0 0 14px;line-height:1.6}
+/* 開始鈕固定在拇指區 */
+.dock{position:sticky;bottom:0;margin:auto calc(-16px - var(--sar)) calc(-20px - var(--sab)) calc(-16px - var(--sal));
+  padding:18px calc(16px + var(--sar)) calc(12px + var(--sab)) calc(16px + var(--sal));
+  background:linear-gradient(to bottom,transparent,var(--field) 16px);z-index:2}
+.dock .primary{box-shadow:0 6px 18px rgba(0,0,0,.35)}
 
 /* game */
-.hud{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px}
-.hud .k{font-size:.8rem;color:var(--muted-on-field)}
-.hud .v{font-family:var(--num);font-weight:800;font-size:1.8rem;line-height:1}
-.timer{height:6px;background:var(--field-2);border-radius:3px;overflow:hidden;margin-bottom:12px}
+/* 遊戲畫面：剛好一個螢幕高，不捲動 */
+#game.active{height:100vh;height:100dvh;min-height:0;overflow:hidden;
+  padding-top:calc(var(--sat) + 10px);padding-bottom:calc(var(--sab) + 10px);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.playing{overflow:hidden;position:fixed;inset:0}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;flex:none}
+.hud>div{flex:1}
+.hud .k{font-size:.75rem;color:var(--muted-on-field)}
+.hud .v{font-family:var(--num);font-weight:800;font-size:1.7rem;line-height:1}
+.hud .v.warn{color:#ff8a80;animation:pulse .5s ease-in-out infinite alternate}
+@keyframes pulse{to{transform:scale(1.12)}}
+.book-btn{flex:none;min-width:48px;height:48px;border:none;border-radius:12px;background:var(--tag);color:#7a2a22;
+  font-weight:900;font-size:.8rem;line-height:1.1;padding:4px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.book-btn span{font-size:1.15rem}
+.timer{height:6px;background:var(--field-2);border-radius:3px;overflow:hidden;margin-bottom:8px;flex:none}
 .timer i{display:block;height:100%;width:100%;background:var(--tag);transform-origin:left}
 .timer i.low{background:var(--red)}
 
-.shout{width:100%;border:2px dashed var(--tag);background:transparent;color:var(--ink-on-field);border-radius:10px;padding:11px;font-size:1rem;font-weight:700;margin-bottom:10px}
+.shout{width:100%;border:2px dashed var(--tag);background:transparent;color:var(--ink-on-field);border-radius:12px;padding:10px;min-height:48px;font-size:1rem;font-weight:700;margin-bottom:8px;flex:none}
 .shout.done{opacity:.45;border-style:solid}
 
 .scene{
+  flex:1 1 auto;min-height:190px;display:flex;flex-direction:column;
   position:relative;border-radius:14px;overflow:hidden;touch-action:none;
   background:var(--ground);
   background-image:radial-gradient(circle at 20% 30%,rgba(255,255,255,.06) 0 2px,transparent 3px),radial-gradient(circle at 70% 80%,rgba(0,0,0,.08) 0 2px,transparent 3px);
@@ -73,12 +100,22 @@ h1 .strip i{display:block;height:10px;flex:1;border-radius:2px}
   transition:transform .25s ease;will-change:transform;
 }
 .scene.dragging{transition:none}
+.scene.enter{animation:enter .25s ease-out}
+@keyframes enter{from{opacity:0;scale:.94}}
 .scene .name{position:absolute;right:12px;bottom:10px;font-size:.85rem;font-weight:700;color:rgba(255,255,255,.85);text-shadow:0 1px 2px rgba(0,0,0,.5);pointer-events:none;max-width:60%;text-align:right}
-.scene svg{display:block;width:100%;height:auto;padding-top:58px}
+#fig{flex:1 1 auto;min-height:0;position:relative}
+.scene svg{position:absolute;inset:0;display:block;width:100%;height:100%}
 .bubble{
-  position:absolute;top:10px;left:10px;right:10px;background:#fff;color:#222;border-radius:12px;
-  padding:9px 12px;font-size:.95rem;line-height:1.5;min-height:42px;box-shadow:0 3px 8px rgba(0,0,0,.25);
+  position:relative;flex:none;margin:10px 10px 4px;background:#fff;color:#222;border-radius:12px;
+  padding:8px 12px;font-size:.95rem;line-height:1.45;min-height:3.6em;box-shadow:0 3px 8px rgba(0,0,0,.25);z-index:1;
 }
+.scene-air{position:absolute;right:10px;bottom:calc(18% + 20px);z-index:2;
+  border:none;border-radius:14px;background:var(--red);color:#fff;font-weight:900;font-size:1rem;line-height:1.25;
+  padding:9px 14px;min-height:52px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.45);display:none;
+  animation:glow 1s ease-in-out infinite alternate}
+.scene-air.show{display:block}
+.scene-air small{display:block;font-weight:500;font-size:.75rem;opacity:.9}
+@keyframes glow{to{box-shadow:0 0 0 6px rgba(200,48,42,.35),0 4px 14px rgba(0,0,0,.45)}}
 .bubble::after{content:"";position:absolute;left:34px;bottom:-9px;border:9px solid transparent;border-bottom:0;border-top-color:#fff}
 .bubble .me{color:#6b604a;font-size:.85rem}
 .stamp{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;font-size:3rem;font-weight:900;color:#fff;opacity:0;z-index:3}
@@ -87,59 +124,61 @@ h1 .strip i{display:block;height:10px;flex:1;border-radius:2px}
 .hs .ring{fill:rgba(255,255,255,.12);stroke:#fff;stroke-width:2.5;stroke-dasharray:6 5;animation:spin 6s linear infinite;transform-box:fill-box;transform-origin:center}
 .hs.checked .ring{stroke-dasharray:none;fill:rgba(255,255,255,.05);stroke:rgba(255,255,255,.5);animation:none}
 .hs .pill{fill:#fff}
-.hs .pill-t{font:700 12px var(--sans);fill:#2a2418;text-anchor:middle;dominant-baseline:central}
+.hs .pill-t{font:700 15px var(--sans);fill:#2a2418;text-anchor:middle;dominant-baseline:central}
+.hs .hit{fill:transparent}
+.hs:focus{outline:none}
+.hs:focus-visible .ring{stroke:#ffe066;stroke-width:4}
 .hs.checked .pill{fill:rgba(255,255,255,.55)}
-.hs:hover .ring{fill:rgba(255,255,255,.25)}
+.hs.tap .ring{fill:rgba(255,255,255,.4)}
+@media (hover:hover){.hs:hover .ring{fill:rgba(255,255,255,.25)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 .chest{transform-box:fill-box;transform-origin:center}
-@media (prefers-reduced-motion:reduce){.hs .ring{animation:none}.chest{animation:none!important}.scene{transition:none}}
+@media (prefers-reduced-motion:reduce){.hs .ring{animation:none}.chest{animation:none!important}.scene{transition:none}.scene.enter{animation:none}.scene-air{animation:none}.hud .v.warn{animation:none}}
 
-.log{background:var(--tag);color:var(--tag-ink);border-radius:6px 6px 12px 12px;margin-top:12px;padding:10px 14px}
-.log h4{margin:0 0 6px;font-size:.85rem;color:var(--tag-muted);font-weight:700}
-.log dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:.95rem}
+.log{background:var(--tag);color:var(--tag-ink);border-radius:6px 6px 12px 12px;margin-top:8px;padding:7px 12px 8px;flex:none;position:relative}
+.log h4{position:absolute;top:7px;right:12px;margin:0;font-size:.72rem;color:var(--tag-muted);font-weight:700}
+.log dl{display:grid;grid-template-columns:auto 1fr;gap:1px 10px;margin:0;font-size:.9rem;line-height:1.45}
 .log dt{color:var(--tag-muted)}
-.log dd{margin:0;font-weight:700}
-.airway{margin-top:8px;width:100%;border:none;border-radius:8px;background:var(--red);color:#fff;font-weight:700;padding:10px;font-size:.95rem;display:none}
-.airway.show{display:block}
+.log dd{margin:0;font-weight:700;min-width:0}
+.log dd.new{animation:flash .6s ease-out}
+@keyframes flash{from{background:rgba(226,178,28,.55)}}
 
-.btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
-.btns button{border:none;border-radius:10px;padding:11px 4px;color:#fff;font-weight:700;font-size:.95rem;line-height:1.3}
-.btns small{display:block;font-weight:500;font-size:.72rem;opacity:.85}
+.btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px;flex:none}
+.btns button{border:none;border-radius:12px;padding:8px 2px;min-height:60px;color:#fff;font-weight:900;font-size:1.05rem;line-height:1.25}
+.btns small{display:block;font-weight:500;font-size:.72rem;opacity:.9}
 .b-red{background:var(--red)} .b-yellow{background:var(--yellow);color:#2a2418!important}
 .b-green{background:var(--green)} .b-black{background:var(--black);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
-.swipe-tip{text-align:center;font-size:.8rem;color:var(--muted-on-field);margin-top:8px}
+/* 矮螢幕（小手機、網址列展開）再壓縮 */
+@media (max-height:640px){
+  .hud .v{font-size:1.4rem}.hud .k{font-size:.7rem}.book-btn{height:42px}
+  .shout{min-height:42px;padding:7px;font-size:.92rem;margin-bottom:6px}
+  .bubble{font-size:.88rem;padding:6px 10px;min-height:3.3em;margin:8px 8px 2px}
+  .log{padding:5px 10px 6px}.log dl{font-size:.82rem;line-height:1.35}
+  .btns button{min-height:52px;font-size:.98rem}
+}
 
 /* rulebook: a page that peeks from the right edge and slides to the front */
 .book-shade{position:fixed;inset:0;background:rgba(10,12,8,.45);z-index:11;opacity:0;pointer-events:none;transition:opacity .3s}
 .book-shade.open{opacity:1;pointer-events:auto}
 .book{
-  position:fixed;top:0;right:0;height:100%;width:min(94vw,560px);z-index:12;display:none;
-  transform:translateX(calc(100% - 40px));transition:transform .4s cubic-bezier(.3,.7,.2,1);
+  position:fixed;left:0;right:0;bottom:0;margin:0 auto;width:100%;max-width:600px;max-height:88dvh;z-index:12;
+  display:flex;flex-direction:column;visibility:hidden;
+  transform:translateY(105%);transition:transform .32s cubic-bezier(.3,.7,.2,1),visibility 0s .32s;
   background:var(--tag);color:var(--tag-ink);
   background-image:repeating-linear-gradient(transparent 0 29px,rgba(107,96,74,.18) 29px 30px);
-  border-radius:12px 0 0 12px;box-shadow:-4px 0 14px rgba(0,0,0,.35);
+  border-radius:18px 18px 0 0;box-shadow:0 -12px 34px rgba(0,0,0,.45);
 }
-body.playing .book{display:block}
-.book.open{transform:translateX(0);box-shadow:-12px 0 34px rgba(0,0,0,.45)}
+.book.open{transform:translateY(0);visibility:visible;transition:transform .32s cubic-bezier(.3,.7,.2,1)}
 @media (prefers-reduced-motion:reduce){.book{transition:none}}
-.book-spine{
-  position:absolute;left:0;top:0;bottom:0;width:40px;border:none;border-radius:12px 0 0 12px;
-  background:linear-gradient(to right,#e3d5b2,var(--tag));border-right:1px dashed var(--tag-edge);
-  color:#7a2a22;font-weight:900;font-size:1rem;letter-spacing:.25em;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
-}
-.book-spine .label{display:flex;flex-direction:column;align-items:center;letter-spacing:0;line-height:1.25}
-.book-spine .arrow{font-size:1.1rem;letter-spacing:0;transition:transform .4s}
-.book.open .book-spine .arrow{transform:rotate(180deg)}
+.book-grip{flex:none;height:22px;display:grid;place-items:center;touch-action:none}
+.book-grip::before{content:"";width:44px;height:5px;border-radius:3px;background:var(--tag-edge)}
 .book-page{
-  position:absolute;top:0;bottom:0;left:40px;right:0;overflow-y:auto;
-  padding:calc(env(safe-area-inset-top,0px) + 18px) 18px calc(env(safe-area-inset-bottom,0px) + 20px) 16px;
+  flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  padding:0 calc(18px + var(--sar)) calc(var(--sab) + 20px) calc(18px + var(--sal));
 }
-.book:not(.open) .book-page{visibility:hidden}
-@media (max-width:680px){body.playing #game{padding-right:50px}}
 .book-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.book-head h2{margin:0;font-size:1.5rem;font-weight:900}
-.book-close{border:none;background:#7a2a22;color:#f3e6c8;border-radius:8px;padding:7px 12px;font-weight:700}
+.book-head h2{margin:0;font-size:1.4rem;font-weight:900}
+.book-close{border:none;background:#7a2a22;color:#f3e6c8;border-radius:10px;padding:0 16px;min-height:44px;font-weight:700;font-size:1rem}
 .book .sub2{color:var(--tag-muted);font-size:.85rem;margin:0 0 14px}
 .flow{list-style:none;margin:0 0 18px;padding:0;counter-reset:s}
 .flow li{position:relative;font-size:1.05rem;padding:12px 14px 12px 46px;margin-bottom:8px;background:rgba(255,255,255,.45);border-radius:8px;line-height:1.6;counter-increment:s}
@@ -155,9 +194,12 @@ body.playing .book{display:block}
 .book .swatches i{width:14px;height:14px;border-radius:3px;flex:none}
 
 /* feedback */
-.fb{position:fixed;inset:0;background:rgba(15,18,12,.72);display:none;align-items:flex-end;justify-content:center;z-index:10;padding:0 12px;padding-bottom:env(safe-area-inset-bottom,0px)}
+.fb{position:fixed;inset:0;background:rgba(15,18,12,.72);display:none;align-items:flex-end;justify-content:center;z-index:20}
 .fb.show{display:flex}
-.sheet{background:var(--tag);color:var(--tag-ink);width:100%;max-width:600px;max-height:85vh;overflow:auto;border-radius:16px 16px 0 0;padding:22px 20px 20px;animation:up .22s ease-out}
+.sheet{background:var(--tag);color:var(--tag-ink);width:100%;max-width:600px;max-height:88vh;max-height:88dvh;overflow:auto;overscroll-behavior:contain;
+  border-radius:18px 18px 0 0;padding:20px calc(20px + var(--sar)) calc(16px + var(--sab)) calc(20px + var(--sal));animation:up .22s ease-out}
+.sheet .primary{position:sticky;bottom:0}
+.sheet .primary[disabled]{opacity:.6}
 @keyframes up{from{transform:translateY(40px);opacity:0}}
 @media (prefers-reduced-motion:reduce){.sheet{animation:none}}
 .verdict{font-size:1.5rem;font-weight:900;margin:0 0 6px}
@@ -175,9 +217,15 @@ body.playing .book{display:block}
 .review .item{background:var(--tag);color:var(--tag-ink);border-radius:8px;padding:12px 14px;margin-bottom:10px;line-height:1.65}
 .review .item b{display:block}
 .review .item small{color:var(--tag-muted)}
-.row{display:flex;gap:10px;margin-top:auto;padding-top:12px}
-.ghost{background:transparent;border:2px solid var(--tag);color:var(--ink-on-field);border-radius:10px;padding:14px;font-weight:700;font-size:1rem;flex:1}
+.row{display:flex;gap:10px}
+.ghost{background:var(--field);border:2px solid var(--tag);color:var(--ink-on-field);border-radius:12px;padding:14px;min-height:56px;font-weight:700;font-size:1rem;flex:1}
 .row .primary{flex:1;margin:0}
+
+/* 橫向提示：這款遊戲為直向設計 */
+.rotate{position:fixed;inset:0;z-index:50;background:var(--field);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:20px;font-weight:700;font-size:1.1rem}
+.rotate i{font-style:normal;font-size:3rem;display:block;animation:rot 1.6s ease-in-out infinite}
+@keyframes rot{0%,30%{transform:rotate(90deg)}70%,100%{transform:rotate(0)}}
+@media (orientation:landscape) and (max-height:500px) and (pointer:coarse){.rotate{display:flex}}
 </style>
 </head>
 <body>
@@ -219,8 +267,8 @@ body.playing .book{display:block}
     <div><b style="color:#9a9a9a">↓</b>下滑：黑色 無生命徵象</div>
   </div>
 
-  <button class="primary" id="go">開始檢傷</button>
   <p class="note">小技巧：檢查照 START 的順序做，一找到決定性的結果就可以分類，不需要全部檢查。內容依照 START 檢傷分類法編寫，報告前請對照課本確認。</p>
+  <div class="dock"><button class="primary" id="go">開始檢傷</button></div>
 </section>
 
 <section class="screen" id="game">
@@ -228,6 +276,7 @@ body.playing .book{display:block}
     <div><div class="k">傷患</div><div class="v" id="prog">1/15</div></div>
     <div style="text-align:center"><div class="k">剩餘秒數</div><div class="v" id="sec">20</div></div>
     <div style="text-align:right"><div class="k">分數</div><div class="v" id="score">0</div></div>
+    <button class="book-btn" id="bookTab" aria-expanded="false" aria-controls="book"><span>📖</span>手冊</button>
   </div>
   <div class="timer"><i id="bar"></i></div>
 
@@ -238,6 +287,7 @@ body.playing .book{display:block}
     <div id="fig"></div>
     <div class="name" id="who"></div>
     <div class="stamp" id="stamp"></div>
+    <button class="scene-air" id="airway">打開呼吸道<small>壓額抬下巴</small></button>
   </div>
 
   <div class="log">
@@ -248,7 +298,6 @@ body.playing .book{display:block}
       <dt>循環</dt><dd id="l-circ">—</dd>
       <dt>意識</dt><dd id="l-mind">—</dd>
     </dl>
-    <button class="airway" id="airway">打開呼吸道（壓額抬下巴）</button>
   </div>
 
   <div class="btns">
@@ -257,7 +306,6 @@ body.playing .book{display:block}
     <button class="b-red" data-c="red">→ 紅<small>立即</small></button>
     <button class="b-black" data-c="black">↓ 黑<small>無徵象</small></button>
   </div>
-  <p class="swipe-tip">點身體檢查，拖動傷患滑向分類方向</p>
 </section>
 
 <section class="screen" id="result">
@@ -266,18 +314,19 @@ body.playing .book{display:block}
   <p class="sub" id="acc"></p>
   <div class="grade" id="grade"></div>
   <div class="review" id="review"></div>
-  <div class="row">
+  <div class="dock"><div class="row">
     <button class="ghost" id="rules">看檢傷原則</button>
     <button class="primary" id="again">再玩一次</button>
-  </div>
+  </div></div>
 </section>
 
 <div class="book-shade" id="bookShade"></div>
 <aside class="book" id="book" aria-label="檢傷手冊">
-  <button class="book-spine" id="bookTab" aria-expanded="false" aria-controls="bookPage"><span class="arrow">◀</span><span class="label"><span>檢</span><span>傷</span><span>手</span><span>冊</span></span></button>
+  <div class="book-grip" id="bookGrip"></div>
   <div class="book-page" id="bookPage">
     <div class="book-head">
       <h2>START 檢傷手冊</h2>
+      <button class="book-close" id="bookClose">關閉</button>
     </div>
     <p class="sub2">照順序往下判斷，一旦符合就停下來分類。計時不會暫停喔！</p>
     <ol class="flow">
@@ -314,6 +363,8 @@ body.playing .book{display:block}
     <button class="primary" id="next">下一位傷患</button>
   </div>
 </div>
+
+<div class="rotate" aria-hidden="true"><i>📱</i>請將手機轉回直向<br><small style="font-weight:400;opacity:.8">這個遊戲是為直向手機設計的</small></div>
 
 <script>
 const COLORS={
@@ -418,11 +469,14 @@ function figure(p){
     L.eyes==="half"?`<path d="M60 97 h10 M60 123 h10" stroke="#3a2a1e" stroke-width="3"/>`:
     `<circle cx="66" cy="97" r="3" fill="#2a2418"/><circle cx="66" cy="123" r="3" fill="#2a2418"/>`;
   const rate=p.breath; const anim=rate>0?`style="animation:breathe ${(60/rate).toFixed(2)}s ease-in-out infinite"`:"";
+  /* 手指比滑鼠粗：每個檢查點都有一圈看不見、較大的點擊範圍 */
   const hs=(id,x,y,r,label,px,py)=>`<g class="hs" data-act="${id}" tabindex="0" role="button" aria-label="${label}">
+    <circle class="hit" cx="${x}" cy="${y}" r="${Math.max(r,28)}"/>
     <circle class="ring" cx="${x}" cy="${y}" r="${r}"/>
-    <rect class="pill" x="${px-30}" y="${py-11}" width="60" height="22" rx="11"/>
+    <rect class="hit" x="${px-40}" y="${py-18}" width="80" height="36"/>
+    <rect class="pill" x="${px-35}" y="${py-14}" width="70" height="28" rx="14"/>
     <text class="pill-t" x="${px}" y="${py}">${label}</text></g>`;
-  return `<svg viewBox="0 0 420 222" role="img" aria-label="傷患平躺在地上">
+  return `<svg viewBox="0 -2 420 226" preserveAspectRatio="xMidYMid meet" role="img" aria-label="傷患平躺在地上">
   <style>@keyframes breathe{50%{transform:scale(1.07,1.12)}}</style>
   <ellipse cx="215" cy="190" rx="190" ry="14" fill="rgba(0,0,0,.18)"/>
   ${L.marks.filter(m=>m[0]==="pool").map(mark).join("")}
@@ -442,10 +496,10 @@ function figure(p){
   <circle cx="56" cy="111" r="32" fill="${skin}"/>
   ${eyes}<path d="M84 104 q3 7 0 14" stroke="#7a4a3a" stroke-width="2.5" fill="none"/>
   ${L.marks.filter(m=>m[0]!=="pool").map(mark).join("")}
-  ${hs("mind",56,111,40,"拍肩",56,166)}
-  ${hs("breath",165,111,34,"看胸口",165,152)}
   ${hs("pulse",212,174,20,"摸手腕",212,208)}
   ${hs("refill",234,48,18,"壓指尖",234,16)}
+  ${hs("mind",56,111,40,"拍肩",56,166)}
+  ${hs("breath",165,111,34,"看胸口",155,152)}
   </svg>`;
 }
 
@@ -454,12 +508,23 @@ const $=id=>document.getElementById(id);
 const LIMIT=20;
 let deck=[],idx=0,score=0,right=0,mistakes=[],t=0,timer=null,locked=false,done=new Set(),cur=null;
 
+/* 手機震動回饋（Android 支援；iPhone 會自動忽略） */
+function buzz(p){try{if(navigator.vibrate)navigator.vibrate(p)}catch(_){}}
+/* 遊戲中讓螢幕保持亮著 */
+let wake=null;
+async function keepAwake(on){
+  try{
+    if(on&&!wake&&"wakeLock" in navigator){wake=await navigator.wakeLock.request("screen");wake.addEventListener("release",()=>wake=null)}
+    else if(!on&&wake){await wake.release();wake=null}
+  }catch(_){}
+}
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));window.scrollTo(0,0);
-  document.body.classList.toggle("playing",id==="game");if(id!=="game")book(false)}
+  document.body.classList.toggle("playing",id==="game");if(id!=="game")book(false);keepAwake(id==="game")}
 function book(open){
   $("book").classList.toggle("open",open);$("bookShade").classList.toggle("open",open);
   $("bookTab").setAttribute("aria-expanded",open);
-  if(open)$("bookTab").focus();
+  $("book").style.transform="";
+  if(open)$("bookClose").focus({preventScroll:true});
 }
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function say(me,them){$("bubble").innerHTML=(me?`<div class="me">你：${me}</div>`:"")+(them||"")}
@@ -475,20 +540,42 @@ function deal(){
   ["walk","breath","circ","mind"].forEach(k=>$("l-"+k).textContent="—");
   $("airway").classList.remove("show");
   $("shout").classList.remove("done");
-  say("",'<span style="color:#777">現場很混亂，先從哪裡開始檢查？</span>');
-  const sc=$("scene");sc.style.transform="";$("stamp").style.opacity=0;
-  t=LIMIT;tick();clearInterval(timer);
-  timer=setInterval(()=>{t-=0.1;tick();if(t<=0)answer(null)},100);
+  say("",idx===0?'<span style="color:#777">先<b>點身體</b>檢查，決定好就<b>把傷患往分類方向拖</b>，或按下方按鈕。</span>':'<span style="color:#777">現場很混亂，先從哪裡開始檢查？</span>');
+  const sc=$("scene");sc.classList.add("dragging");sc.style.transform="";$("stamp").style.opacity=0;
+  sc.classList.remove("enter");void sc.offsetWidth;sc.classList.add("enter");sc.classList.remove("dragging");
+  t=LIMIT;lastSec=LIMIT;tick();runTimer();
+}
+/* 用實際經過時間計時：切到背景（來電、通知）時自動暫停，回來再繼續 */
+let lastTs=0,lastSec=LIMIT;
+function runTimer(){
+  clearInterval(timer);lastTs=performance.now();
+  timer=setInterval(()=>{
+    const now=performance.now();t-=(now-lastTs)/1000;lastTs=now;tick();
+    if(t<=0)answer(null);
+  },100);
 }
 function tick(){
   $("bar").style.transform=`scaleX(${Math.max(t,0)/LIMIT})`;
   $("bar").classList.toggle("low",t<6);
-  $("sec").textContent=Math.ceil(Math.max(t,0));
+  const s=Math.ceil(Math.max(t,0));
+  $("sec").textContent=s;$("sec").classList.toggle("warn",t<6&&t>0);
+  if(s!==lastSec){lastSec=s;if(s<=5&&s>0)buzz(15)}
 }
+document.addEventListener("visibilitychange",()=>{
+  if(!$("game").classList.contains("active"))return;
+  if(document.hidden)clearInterval(timer);
+  else{keepAwake(true);if(!locked)runTimer()}
+});
 function markChecked(act){const g=document.querySelector(`.hs[data-act="${act}"]`);if(g)g.classList.add("checked")}
 
 function act(a){
   if(locked)return; const p=cur;
+  buzz(8);
+  const before={};["walk","breath","circ","mind"].forEach(k=>before[k]=$("l-"+k).textContent);
+  act_(a,p);
+  ["walk","breath","circ","mind"].forEach(k=>{const d=$("l-"+k);if(d.textContent!==before[k]){d.classList.remove("new");void d.offsetWidth;d.classList.add("new")}});
+}
+function act_(a,p){
   if(a==="walk"){
     done.add("walk");$("shout").classList.add("done");
     if(p.walk){say("能走的人請走過來！",p.walkLine);$("l-walk").textContent="可以自己走過來"}
@@ -498,13 +585,13 @@ function act(a){
     done.add("breath");markChecked("breath");
     const r=done.has("airway")?p.airway:p.breath;
     if(r===0){say("（看胸口起伏，聽呼吸聲…）","胸口完全沒有起伏，也聽不到呼吸聲。");$("l-breath").textContent="沒有呼吸";$("airway").classList.add("show")}
-    else{say("（看胸口起伏，數 15 秒再乘以 4…）",`呼吸大約每分鐘 <b>${r}</b> 次。`);$("l-breath").textContent=`每分鐘 ${r} 次`}
+    else{say("（看胸口起伏，數 15 秒再乘以 4…）",`呼吸大約每分鐘 <b>${r}</b> 次。`);$("l-breath").textContent=`${r} 次/分`}
   }
   if(a==="airway"){
     done.add("airway");$("airway").classList.remove("show");
     if(p.airway>0){
       say("（一手壓額頭，一手抬下巴，打開呼吸道）",`咳…！胸口開始起伏了，每分鐘約 <b>${p.airway}</b> 次。`);
-      $("l-breath").textContent=`開呼吸道後恢復，每分鐘 ${p.airway} 次`;
+      $("l-breath").textContent=`開呼吸道後恢復，${p.airway} 次/分`;
       $("chest").style.animation=`breathe ${(60/p.airway).toFixed(2)}s ease-in-out infinite`;
     }else{
       say("（一手壓額頭，一手抬下巴，打開呼吸道）","等了幾秒，胸口仍然沒有任何起伏。");
@@ -515,7 +602,7 @@ function act(a){
     done.add("circ");markChecked("pulse");
     const txt=p.breath===0&&!(p.airway>0)?"摸不到任何脈搏。":p.pulse?"摸得到，跳動清楚。":"手腕冰冷，摸不到脈搏。";
     say("（兩指按在手腕拇指側…）",txt);
-    addCirc(p.pulse&&!(p.breath===0&&!p.airway)?"手腕脈搏：摸得到":"手腕脈搏：摸不到");
+    addCirc(p.pulse&&!(p.breath===0&&!p.airway)?"脈搏：摸得到":"脈搏：摸不到");
   }
   if(a==="refill"){
     done.add("circ");markChecked("refill");
@@ -538,6 +625,7 @@ function answer(choice){
   const missed=need.filter(n=>!done.has(n));
   const extra=[...done].filter(n=>!need.includes(n)).length;
   if(choice)flyOut(choice);
+  buzz(ok?[20,40,20]:[80,50,80]);
   let pts=0,proc="";
   if(ok){
     pts=100+Math.round(Math.max(t,0)*5);
@@ -555,10 +643,12 @@ function answer(choice){
     $("ans").innerHTML=`正確分類：<span class="dot" style="background:${COLORS[a].hex}"></span>${COLORS[a].name}`+(!ok&&choice?`　你選了：${COLORS[choice].short}`:"");
     $("why").textContent=cur.why;$("proc").textContent=proc;
     $("next").textContent=idx===deck.length-1?"看結果":"下一位傷患";
-    $("fb").classList.add("show");$("next").focus();
+    $("fb").classList.add("show");$("fb").querySelector(".sheet").scrollTop=0;
+    /* 防止滑動後手指還沒離開就誤觸「下一位」 */
+    const n=$("next");n.disabled=true;setTimeout(()=>{n.disabled=false;n.focus({preventScroll:true})},450);
   },choice?260:0);
 }
-function next(){$("fb").classList.remove("show");idx++;if(idx<deck.length)deal();else finish()}
+function next(){if($("next").disabled)return;$("fb").classList.remove("show");idx++;if(idx<deck.length)deal();else finish()}
 
 function finish(){
   show("result");
@@ -577,30 +667,37 @@ function flyOut(c){const d={red:[1,0],green:[-1,0],yellow:[0,-1],black:[0,1]}[c]
 
 /* ---- 點擊 vs 拖曳 ---- */
 const scene=$("scene"),stamp=$("stamp");
-let sx=0,sy=0,down=false,moved=false,target=null,pid=null;
-function dirOf(dx,dy){if(Math.max(Math.abs(dx),Math.abs(dy))<90)return null;
+let sx=0,sy=0,st=0,down=false,moved=false,target=null,pid=null,lastDir=null;
+/* 拖超過螢幕寬約 22%（至少 70px）就算分類；快速甩一下也算 */
+function dirOf(dx,dy,flick){const need=flick?40:Math.max(70,Math.min(110,scene.clientWidth*.22));
+  if(Math.max(Math.abs(dx),Math.abs(dy))<need)return null;
   return Math.abs(dx)>Math.abs(dy)?(dx>0?"red":"green"):(dy>0?"black":"yellow")}
 scene.addEventListener("pointerdown",e=>{
-  if(locked)return;down=true;moved=false;sx=e.clientX;sy=e.clientY;pid=e.pointerId;
+  if(locked||e.target.closest(".scene-air"))return;
+  down=true;moved=false;lastDir=null;sx=e.clientX;sy=e.clientY;st=performance.now();pid=e.pointerId;
   const h=e.target.closest(".hs");target=h?h.dataset.act:null;
+  if(h)h.classList.add("tap");
 });
 scene.addEventListener("pointermove",e=>{
   if(!down)return;const dx=e.clientX-sx,dy=e.clientY-sy;
-  if(!moved&&Math.hypot(dx,dy)>10){moved=true;scene.classList.add("dragging");try{scene.setPointerCapture(pid)}catch(_){}}
+  if(!moved&&Math.hypot(dx,dy)>12){moved=true;scene.classList.add("dragging");clearTap();try{scene.setPointerCapture(pid)}catch(_){}}
   if(!moved)return;
   scene.style.transform=`translate(${dx}px,${dy}px) rotate(${dx/22}deg)`;
   const d=dirOf(dx,dy);
+  if(d!==lastDir){lastDir=d;if(d)buzz(12)}
   if(d){stamp.style.background=COLORS[d].hex;stamp.style.color=d==="yellow"?"#2a2418":"#fff";stamp.textContent=COLORS[d].short;stamp.style.opacity=.85}
   else stamp.style.opacity=0;
 });
+function clearTap(){document.querySelectorAll(".hs.tap").forEach(h=>h.classList.remove("tap"))}
 function up(e){
-  if(!down)return;down=false;scene.classList.remove("dragging");
+  if(!down)return;down=false;scene.classList.remove("dragging");clearTap();
   if(!moved){if(target)act(target);return}
-  const d=dirOf(e.clientX-sx,e.clientY-sy);
+  const dx=e.clientX-sx,dy=e.clientY-sy,v=Math.hypot(dx,dy)/Math.max(1,performance.now()-st);
+  const d=dirOf(dx,dy)||(v>.6?dirOf(dx,dy,true):null);
   if(d)answer(d);else{scene.style.transform="";stamp.style.opacity=0}
 }
 scene.addEventListener("pointerup",up);
-scene.addEventListener("pointercancel",()=>{if(down){down=false;scene.classList.remove("dragging");scene.style.transform="";stamp.style.opacity=0}});
+scene.addEventListener("pointercancel",()=>{clearTap();if(down){down=false;scene.classList.remove("dragging");scene.style.transform="";stamp.style.opacity=0}});
 scene.addEventListener("keydown",e=>{const h=e.target.closest&&e.target.closest(".hs");if(h&&(e.key==="Enter"||e.key===" ")){e.preventDefault();act(h.dataset.act)}});
 
 $("shout").onclick=()=>act("walk");
@@ -610,11 +707,18 @@ document.addEventListener("keydown",e=>{
   if($("book").classList.contains("open")){if(e.key==="Escape")book(false);return}
   if((e.key==="h"||e.key==="H")&&$("game").classList.contains("active")){book(true);return}
   if($("fb").classList.contains("show")){if(e.key==="Enter"||e.key===" "){e.preventDefault();next()}return}
-  if(!$("game").classList.contains("active"))return;
+  if(!$("game").classList.contains("active")||locked)return;
   const m={ArrowRight:"red",ArrowLeft:"green",ArrowUp:"yellow",ArrowDown:"black"}[e.key];
   if(m){e.preventDefault();answer(m)}
 });
-$("bookTab").onclick=()=>book(!$("book").classList.contains("open"));$("bookShade").onclick=()=>book(false);
+$("bookTab").onclick=()=>book(!$("book").classList.contains("open"));$("bookShade").onclick=()=>book(false);$("bookClose").onclick=()=>book(false);
+/* 手冊：拉住上方把手往下滑即可關閉 */
+(()=>{const g=$("bookGrip"),b=$("book");let y0=null;
+  g.addEventListener("pointerdown",e=>{y0=e.clientY;g.setPointerCapture(e.pointerId);b.style.transition="none"});
+  g.addEventListener("pointermove",e=>{if(y0===null)return;const dy=Math.max(0,e.clientY-y0);b.style.transform=`translateY(${dy}px)`});
+  const end=e=>{if(y0===null)return;const dy=e.clientY-y0;y0=null;b.style.transition="";b.style.transform="";if(dy>80)book(false)};
+  g.addEventListener("pointerup",end);g.addEventListener("pointercancel",end);
+})();
 $("go").onclick=startGame;$("again").onclick=startGame;$("next").onclick=next;
 $("rules").onclick=()=>show("start");
 </script>
