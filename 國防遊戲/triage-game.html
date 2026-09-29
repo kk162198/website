@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>檢傷分類：滑動救援</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --field:#3a4130; --field-2:#2d3326; --ink-on-field:#e9ecdf; --muted-on-field:#b3b9a4;
+  --tag:#efe4c8; --tag-edge:#d8c9a3; --tag-ink:#2a2418; --tag-muted:#6b604a;
+  --ground:#6f6a5c; --ground-2:#5f5a4d;
+  --red:#c8302a; --yellow:#e2b21c; --green:#3f8f46; --black:#1c1c1c;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --num:"Barlow Condensed","Arial Narrow",var(--sans);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){ --field:#252a1e; --field-2:#1b1f16; --tag:#e6dabb; --ground:#57534a; --ground-2:#4a463e; }
+}
+:root[data-theme="dark"]{ --field:#252a1e; --field-2:#1b1f16; --tag:#e6dabb; --ground:#57534a; --ground-2:#4a463e; }
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;min-height:100%;font-family:var(--sans);color:var(--ink-on-field);
+  background:var(--field);
+  background-image:repeating-linear-gradient(45deg,transparent 0 22px,rgba(0,0,0,.05) 22px 23px);
+  -webkit-tap-highlight-color:transparent;
+}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.screen{display:none;max-width:600px;margin:0 auto;padding:18px 16px 26px;min-height:100vh;min-height:100dvh}
+.screen.active{display:flex;flex-direction:column}
+.dot{display:inline-block;width:.8em;height:.8em;border-radius:50%;vertical-align:-.05em;margin:0 .2em;border:1px solid rgba(255,255,255,.35)}
+
+/* start */
+h1{font-size:clamp(2rem,8vw,2.8rem);font-weight:900;line-height:1.15;margin:16px 0 8px;letter-spacing:.02em}
+h1 .strip{display:flex;gap:4px;margin-bottom:14px}
+h1 .strip i{display:block;height:10px;flex:1;border-radius:2px}
+.lead{color:var(--muted-on-field);line-height:1.75;margin:0 0 18px}
+.panel{background:var(--field-2);border-radius:10px;padding:16px 16px 8px;margin-bottom:16px}
+.panel h2{font-size:1.05rem;margin:0 0 10px}
+.panel ol,.panel ul{margin:0;padding-left:1.4em;line-height:1.75}
+.panel li{margin-bottom:7px}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+.legend div{display:flex;align-items:center;gap:10px;background:var(--field-2);padding:10px 12px;border-radius:8px;font-size:.95rem}
+.legend b{font-family:var(--num);font-size:1.5rem;width:1.3em;text-align:center}
+.primary{background:var(--tag);color:var(--tag-ink);border:none;border-radius:10px;font-size:1.15rem;font-weight:700;padding:16px;width:100%;margin-top:auto}
+.note{font-size:.8rem;color:var(--muted-on-field);margin-top:12px;line-height:1.6}
+
+/* game */
+.hud{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px}
+.hud .k{font-size:.8rem;color:var(--muted-on-field)}
+.hud .v{font-family:var(--num);font-weight:800;font-size:1.8rem;line-height:1}
+.timer{height:6px;background:var(--field-2);border-radius:3px;overflow:hidden;margin-bottom:12px}
+.timer i{display:block;height:100%;width:100%;background:var(--tag);transform-origin:left}
+.timer i.low{background:var(--red)}
+
+.shout{width:100%;border:2px dashed var(--tag);background:transparent;color:var(--ink-on-field);border-radius:10px;padding:11px;font-size:1rem;font-weight:700;margin-bottom:10px}
+.shout.done{opacity:.45;border-style:solid}
+
+.scene{
+  position:relative;border-radius:14px;overflow:hidden;touch-action:none;
+  background:var(--ground);
+  background-image:radial-gradient(circle at 20% 30%,rgba(255,255,255,.06) 0 2px,transparent 3px),radial-gradient(circle at 70% 80%,rgba(0,0,0,.08) 0 2px,transparent 3px);
+  background-size:26px 26px,34px 34px;
+  box-shadow:0 10px 24px rgba(0,0,0,.3);
+  user-select:none;-webkit-user-select:none;
+  transition:transform .25s ease;will-change:transform;
+}
+.scene.dragging{transition:none}
+.scene .name{position:absolute;right:12px;bottom:10px;font-size:.85rem;font-weight:700;color:rgba(255,255,255,.85);text-shadow:0 1px 2px rgba(0,0,0,.5);pointer-events:none;max-width:60%;text-align:right}
+.scene svg{display:block;width:100%;height:auto;padding-top:58px}
+.bubble{
+  position:absolute;top:10px;left:10px;right:10px;background:#fff;color:#222;border-radius:12px;
+  padding:9px 12px;font-size:.95rem;line-height:1.5;min-height:42px;box-shadow:0 3px 8px rgba(0,0,0,.25);
+}
+.bubble::after{content:"";position:absolute;left:34px;bottom:-9px;border:9px solid transparent;border-bottom:0;border-top-color:#fff}
+.bubble .me{color:#6b604a;font-size:.85rem}
+.stamp{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;font-size:3rem;font-weight:900;color:#fff;opacity:0;z-index:3}
+
+.hs{cursor:pointer}
+.hs .ring{fill:rgba(255,255,255,.12);stroke:#fff;stroke-width:2.5;stroke-dasharray:6 5;animation:spin 6s linear infinite;transform-box:fill-box;transform-origin:center}
+.hs.checked .ring{stroke-dasharray:none;fill:rgba(255,255,255,.05);stroke:rgba(255,255,255,.5);animation:none}
+.hs .pill{fill:#fff}
+.hs .pill-t{font:700 12px var(--sans);fill:#2a2418;text-anchor:middle;dominant-baseline:central}
+.hs.checked .pill{fill:rgba(255,255,255,.55)}
+.hs:hover .ring{fill:rgba(255,255,255,.25)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.chest{transform-box:fill-box;transform-origin:center}
+@media (prefers-reduced-motion:reduce){.hs .ring{animation:none}.chest{animation:none!important}.scene{transition:none}}
+
+.log{background:var(--tag);color:var(--tag-ink);border-radius:6px 6px 12px 12px;margin-top:12px;padding:10px 14px}
+.log h4{margin:0 0 6px;font-size:.85rem;color:var(--tag-muted);font-weight:700}
+.log dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:.95rem}
+.log dt{color:var(--tag-muted)}
+.log dd{margin:0;font-weight:700}
+.airway{margin-top:8px;width:100%;border:none;border-radius:8px;background:var(--red);color:#fff;font-weight:700;padding:10px;font-size:.95rem;display:none}
+.airway.show{display:block}
+
+.btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.btns button{border:none;border-radius:10px;padding:11px 4px;color:#fff;font-weight:700;font-size:.95rem;line-height:1.3}
+.btns small{display:block;font-weight:500;font-size:.72rem;opacity:.85}
+.b-red{background:var(--red)} .b-yellow{background:var(--yellow);color:#2a2418!important}
+.b-green{background:var(--green)} .b-black{background:var(--black);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.swipe-tip{text-align:center;font-size:.8rem;color:var(--muted-on-field);margin-top:8px}
+
+/* rulebook: a page that peeks from the right edge and slides to the front */
+.book-shade{position:fixed;inset:0;background:rgba(10,12,8,.45);z-index:11;opacity:0;pointer-events:none;transition:opacity .3s}
+.book-shade.open{opacity:1;pointer-events:auto}
+.book{
+  position:fixed;top:0;right:0;height:100%;width:min(94vw,560px);z-index:12;display:none;
+  transform:translateX(calc(100% - 40px));transition:transform .4s cubic-bezier(.3,.7,.2,1);
+  background:var(--tag);color:var(--tag-ink);
+  background-image:repeating-linear-gradient(transparent 0 29px,rgba(107,96,74,.18) 29px 30px);
+  border-radius:12px 0 0 12px;box-shadow:-4px 0 14px rgba(0,0,0,.35);
+}
+body.playing .book{display:block}
+.book.open{transform:translateX(0);box-shadow:-12px 0 34px rgba(0,0,0,.45)}
+@media (prefers-reduced-motion:reduce){.book{transition:none}}
+.book-spine{
+  position:absolute;left:0;top:0;bottom:0;width:40px;border:none;border-radius:12px 0 0 12px;
+  background:linear-gradient(to right,#e3d5b2,var(--tag));border-right:1px dashed var(--tag-edge);
+  color:#7a2a22;font-weight:900;font-size:1rem;letter-spacing:.25em;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+}
+.book-spine .label{display:flex;flex-direction:column;align-items:center;letter-spacing:0;line-height:1.25}
+.book-spine .arrow{font-size:1.1rem;letter-spacing:0;transition:transform .4s}
+.book.open .book-spine .arrow{transform:rotate(180deg)}
+.book-page{
+  position:absolute;top:0;bottom:0;left:40px;right:0;overflow-y:auto;
+  padding:calc(env(safe-area-inset-top,0px) + 18px) 18px calc(env(safe-area-inset-bottom,0px) + 20px) 16px;
+}
+.book:not(.open) .book-page{visibility:hidden}
+@media (max-width:680px){body.playing #game{padding-right:50px}}
+.book-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.book-head h2{margin:0;font-size:1.5rem;font-weight:900}
+.book-close{border:none;background:#7a2a22;color:#f3e6c8;border-radius:8px;padding:7px 12px;font-weight:700}
+.book .sub2{color:var(--tag-muted);font-size:.85rem;margin:0 0 14px}
+.flow{list-style:none;margin:0 0 18px;padding:0;counter-reset:s}
+.flow li{position:relative;font-size:1.05rem;padding:12px 14px 12px 46px;margin-bottom:8px;background:rgba(255,255,255,.45);border-radius:8px;line-height:1.6;counter-increment:s}
+.flow li::before{content:counter(s);position:absolute;left:10px;top:10px;width:24px;height:24px;border-radius:50%;background:var(--tag-ink);color:var(--tag);font:800 .95rem/24px var(--num);text-align:center}
+.flow .go{display:block;font-size:.9rem;color:var(--tag-muted)}
+.flow .go b{color:var(--tag-ink)}
+.book h3{font-size:1rem;margin:0 0 8px}
+.book table{width:100%;border-collapse:collapse;font-size:1rem;margin-bottom:16px}
+.book td{padding:7px 4px;border-bottom:1px dashed var(--tag-edge);vertical-align:top;line-height:1.5}
+.book td:first-child{white-space:nowrap;font-weight:700;padding-right:10px}
+.book .swatches{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.95rem}
+.book .swatches div{display:flex;align-items:center;gap:6px;padding:7px 8px;background:rgba(255,255,255,.45);border-radius:6px}
+.book .swatches i{width:14px;height:14px;border-radius:3px;flex:none}
+
+/* feedback */
+.fb{position:fixed;inset:0;background:rgba(15,18,12,.72);display:none;align-items:flex-end;justify-content:center;z-index:10;padding:0 12px;padding-bottom:env(safe-area-inset-bottom,0px)}
+.fb.show{display:flex}
+.sheet{background:var(--tag);color:var(--tag-ink);width:100%;max-width:600px;max-height:85vh;overflow:auto;border-radius:16px 16px 0 0;padding:22px 20px 20px;animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.verdict{font-size:1.5rem;font-weight:900;margin:0 0 6px}
+.verdict.ok{color:var(--green)} .verdict.bad{color:var(--red)}
+.ans{margin:0 0 10px;font-weight:700}
+.why{line-height:1.75;margin:0 0 10px}
+.proc{line-height:1.7;margin:0 0 16px;padding:10px 12px;background:rgba(0,0,0,.06);border-radius:8px;font-size:.92rem}
+.sheet .primary{background:var(--field);color:var(--ink-on-field)}
+
+/* result */
+.big{font-family:var(--num);font-weight:800;font-size:5rem;line-height:1;margin:22px 0 0}
+.sub{color:var(--muted-on-field);margin:4px 0 18px}
+.grade{background:var(--field-2);border-radius:10px;padding:14px 16px;line-height:1.7;margin-bottom:16px}
+.review h2{font-size:1.05rem;margin:4px 0 10px}
+.review .item{background:var(--tag);color:var(--tag-ink);border-radius:8px;padding:12px 14px;margin-bottom:10px;line-height:1.65}
+.review .item b{display:block}
+.review .item small{color:var(--tag-muted)}
+.row{display:flex;gap:10px;margin-top:auto;padding-top:12px}
+.ghost{background:transparent;border:2px solid var(--tag);color:var(--ink-on-field);border-radius:10px;padding:14px;font-weight:700;font-size:1rem;flex:1}
+.row .primary{flex:1;margin:0}
+</style>
+</head>
+<body>
+
+<section class="screen active" id="start">
+  <h1>
+    <span class="strip"><i style="background:var(--red)"></i><i style="background:var(--yellow)"></i><i style="background:var(--green)"></i><i style="background:var(--black)"></i></span>
+    檢傷分類<br>滑動救援
+  </h1>
+  <p class="lead">發生大量傷患事件，你是第一位到場的救護員。每位傷患你有 20 秒：親手檢查他的狀況，聽他怎麼回應，再決定該給哪一種顏色的檢傷卡。</p>
+
+  <div class="panel">
+    <h2>怎麼檢查</h2>
+    <ul>
+      <li><b>📢 喊話</b>：「能走的人請走過來！」看他會不會自己走</li>
+      <li><b>點臉</b>：拍肩呼叫，請他握你的手，看意識</li>
+      <li><b>點胸口</b>：看胸部起伏，數呼吸次數</li>
+      <li><b>點手腕</b>：摸橈動脈脈搏</li>
+      <li><b>點指尖</b>：按壓指甲，看微血管回填幾秒</li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h2>START 檢傷原則（照順序判斷）</h2>
+    <ol>
+      <li><b>能自己走路？</b>能 → <span class="dot" style="background:var(--green)"></span>綠色</li>
+      <li><b>有呼吸？</b>沒有 → 打開呼吸道；仍沒有 → <span class="dot" style="background:var(--black)"></span>黑色，恢復呼吸 → <span class="dot" style="background:var(--red)"></span>紅色</li>
+      <li><b>呼吸每分鐘超過 30 次？</b>是 → <span class="dot" style="background:var(--red)"></span>紅色</li>
+      <li><b>循環：</b>回填超過 2 秒或摸不到手腕脈搏 → <span class="dot" style="background:var(--red)"></span>紅色</li>
+      <li><b>意識：</b>無法聽從簡單指令 → <span class="dot" style="background:var(--red)"></span>紅色</li>
+      <li>以上都沒有 → <span class="dot" style="background:var(--yellow)"></span>黃色</li>
+    </ol>
+  </div>
+
+  <div class="legend">
+    <div><b style="color:var(--red)">→</b>右滑：紅色 立即處置</div>
+    <div><b style="color:var(--yellow)">↑</b>上滑：黃色 延遲處置</div>
+    <div><b style="color:var(--green)">←</b>左滑：綠色 輕傷</div>
+    <div><b style="color:#9a9a9a">↓</b>下滑：黑色 無生命徵象</div>
+  </div>
+
+  <button class="primary" id="go">開始檢傷</button>
+  <p class="note">小技巧：檢查照 START 的順序做，一找到決定性的結果就可以分類，不需要全部檢查。內容依照 START 檢傷分類法編寫，報告前請對照課本確認。</p>
+</section>
+
+<section class="screen" id="game">
+  <div class="hud">
+    <div><div class="k">傷患</div><div class="v" id="prog">1/15</div></div>
+    <div style="text-align:center"><div class="k">剩餘秒數</div><div class="v" id="sec">20</div></div>
+    <div style="text-align:right"><div class="k">分數</div><div class="v" id="score">0</div></div>
+  </div>
+  <div class="timer"><i id="bar"></i></div>
+
+  <button class="shout" id="shout">📢 喊話：「能走的人請走過來！」</button>
+
+  <div class="scene" id="scene">
+    <div class="bubble" id="bubble"></div>
+    <div id="fig"></div>
+    <div class="name" id="who"></div>
+    <div class="stamp" id="stamp"></div>
+  </div>
+
+  <div class="log">
+    <h4 id="tagno">檢傷卡 NO. 001</h4>
+    <dl>
+      <dt>行走</dt><dd id="l-walk">—</dd>
+      <dt>呼吸</dt><dd id="l-breath">—</dd>
+      <dt>循環</dt><dd id="l-circ">—</dd>
+      <dt>意識</dt><dd id="l-mind">—</dd>
+    </dl>
+    <button class="airway" id="airway">打開呼吸道（壓額抬下巴）</button>
+  </div>
+
+  <div class="btns">
+    <button class="b-green" data-c="green">← 綠<small>輕傷</small></button>
+    <button class="b-yellow" data-c="yellow">↑ 黃<small>延遲</small></button>
+    <button class="b-red" data-c="red">→ 紅<small>立即</small></button>
+    <button class="b-black" data-c="black">↓ 黑<small>無徵象</small></button>
+  </div>
+  <p class="swipe-tip">點身體檢查，拖動傷患滑向分類方向</p>
+</section>
+
+<section class="screen" id="result">
+  <h1 style="margin-bottom:0">檢傷完成</h1>
+  <div class="big" id="final">0</div>
+  <p class="sub" id="acc"></p>
+  <div class="grade" id="grade"></div>
+  <div class="review" id="review"></div>
+  <div class="row">
+    <button class="ghost" id="rules">看檢傷原則</button>
+    <button class="primary" id="again">再玩一次</button>
+  </div>
+</section>
+
+<div class="book-shade" id="bookShade"></div>
+<aside class="book" id="book" aria-label="檢傷手冊">
+  <button class="book-spine" id="bookTab" aria-expanded="false" aria-controls="bookPage"><span class="arrow">◀</span><span class="label"><span>檢</span><span>傷</span><span>手</span><span>冊</span></span></button>
+  <div class="book-page" id="bookPage">
+    <div class="book-head">
+      <h2>START 檢傷手冊</h2>
+    </div>
+    <p class="sub2">照順序往下判斷，一旦符合就停下來分類。計時不會暫停喔！</p>
+    <ol class="flow">
+      <li>能自己走路嗎？<span class="go">能 → <b>綠色</b>；不能 → 往下</span></li>
+      <li>有呼吸嗎？<span class="go">沒有 → 打開呼吸道：仍沒有 <b>黑色</b>，恢復呼吸 <b>紅色</b></span></li>
+      <li>呼吸每分鐘超過 30 次？<span class="go">是 → <b>紅色</b>；30 次以下 → 往下</span></li>
+      <li>循環正常嗎？<span class="go">回填超過 2 秒或摸不到手腕脈搏 → <b>紅色</b></span></li>
+      <li>能聽從簡單指令嗎？<span class="go">不能 → <b>紅色</b>；能 → <b>黃色</b></span></li>
+    </ol>
+    <h3>怎麼檢查</h3>
+    <table>
+      <tr><td>📢 喊話</td><td>「能走的人請走過來！」</td></tr>
+      <tr><td>點胸口</td><td>看起伏數 15 秒，再乘以 4</td></tr>
+      <tr><td>點手腕</td><td>兩指按在手腕拇指側摸脈搏</td></tr>
+      <tr><td>點指尖</td><td>壓指甲 5 秒放開，數幾秒恢復紅色</td></tr>
+      <tr><td>拍肩</td><td>「聽得到就握我的手」</td></tr>
+    </table>
+    <h3>分類顏色與滑動方向</h3>
+    <div class="swatches">
+      <div><i style="background:var(--red)"></i>→ 紅色 立即處置</div>
+      <div><i style="background:var(--yellow)"></i>↑ 黃色 延遲處置</div>
+      <div><i style="background:var(--green)"></i>← 綠色 輕傷</div>
+      <div><i style="background:var(--black)"></i>↓ 黑色 無生命徵象</div>
+    </div>
+  </div>
+</aside>
+
+<div class="fb" id="fb" role="dialog" aria-modal="true" aria-labelledby="verdict">
+  <div class="sheet">
+    <p class="verdict" id="verdict"></p>
+    <p class="ans" id="ans"></p>
+    <p class="why" id="why"></p>
+    <p class="proc" id="proc"></p>
+    <button class="primary" id="next">下一位傷患</button>
+  </div>
+</div>
+
+<script>
+const COLORS={
+  red:{name:"紅色（立即處置）",short:"紅",hex:"var(--red)"},
+  yellow:{name:"黃色（延遲處置）",short:"黃",hex:"var(--yellow)"},
+  green:{name:"綠色（輕傷）",short:"綠",hex:"var(--green)"},
+  black:{name:"黑色（無生命徵象）",short:"黑",hex:"var(--black)"}
+};
+const SKIN=["#f0c9a4","#e8b98f","#d9a47a","#c68a5e"];
+
+/* 每位傷患：外觀 + 各項檢查的真實狀況。正確答案由 START 規則自動算出。 */
+const CASES=[
+  {who:"小腿擦傷的上班族",walk:true,walkLine:"腳擦傷了好痛…不過我可以走。",
+   look:{shirt:"#4a6fa5",pants:"#2f3a4a",marks:[["scrape","legB"]]},
+   why:"START 第一步只看能不能走。能自己走過來，就先分到綠色，把人力留給走不動的人。"},
+  {who:"手腕扭傷的學生",walk:true,walkLine:"手腕超痛，但我走得動！",
+   look:{shirt:"#f2f2f2",pants:"#27408b",marks:[["swell","handT"]]},
+   why:"能走路就是綠色。扭傷之後可以再用三角巾固定。"},
+  {who:"一直哭的民眾",walk:true,walkLine:"嗚嗚…好可怕…（邊哭邊走過來）",
+   look:{shirt:"#b0567a",pants:"#3b3b3b",marks:[]},
+   why:"情緒激動不影響分類。能走動、沒有危及生命的狀況，屬於綠色。"},
+  {who:"額頭割傷的男子",walk:true,walkLine:"頭一直流血…但我還可以走。",
+   look:{shirt:"#6b8e4e",pants:"#4a3f35",marks:[["blood","head"]]},
+   why:"頭部血管多，流血看起來很嚇人，但他能自己走，所以是綠色，可以請他自己拿布加壓止血。"},
+  {who:"說胸口悶的阿伯",walk:true,walkLine:"胸口有點悶…我慢慢走過去。",
+   look:{shirt:"#8a8a80",pants:"#5a5040",marks:[],skin:1},
+   why:"初步檢傷仍然是能走 → 綠色。但檢傷不是一次就結束，綠色區的傷患要持續重新評估，狀況變差就要升級。"},
+  {who:"倒地的機車騎士",walk:false,walkLine:"（躺在地上喘）我…站不起來…",breath:36,
+   look:{shirt:"#222",pants:"#1f2a44",marks:[["scrape","torso"]]},
+   why:"呼吸每分鐘超過 30 次代表呼吸窘迫，直接分為紅色，不用再往下檢查。"},
+  {who:"被瓦礫壓住的婦人",walk:false,walkLine:"腳被壓住了…動不了…",breath:20,pulse:false,refill:4,pale:true,
+   look:{shirt:"#c9a24a",pants:"#555",marks:[["dust","legT"],["dust","legB"]]},
+   why:"呼吸正常，但循環出了問題：回填超過 2 秒、摸不到手腕脈搏，可能已經休克，分為紅色。"},
+  {who:"臉色蒼白的年輕人",walk:false,walkLine:"好冷…頭好暈…站不起來。",breath:24,pulse:false,refill:3,pale:true,
+   look:{shirt:"#3d7a78",pants:"#2a2a2a",marks:[["blood","belly"]]},
+   why:"摸不到手腕脈搏、回填也超過 2 秒，代表血壓可能很低，屬於紅色。"},
+  {who:"頭部撞擊的中年男子",walk:false,walkLine:"（眼睛半張，含糊地發出聲音）",breath:18,obey:false,
+   mindLine:"嗯…什麼…（眼神渙散，沒有握你的手）",
+   look:{shirt:"#7a4a3a",pants:"#333",marks:[["bruise","head"]],eyes:"half"},
+   why:"呼吸和循環都還可以，但無法聽從簡單指令，可能有腦部傷害，分為紅色。"},
+  {who:"大腿大量出血的傷者",walk:false,walkLine:"腿…血一直流…救我…",breath:28,pulse:false,refill:3,pale:true,
+   look:{shirt:"#e0e0e0",pants:"#3f4f6f",marks:[["pool","thighB"]]},
+   why:"循環不足（回填超過 2 秒）就是紅色。這類大出血傷患在檢傷時可以先快速上止血帶，再繼續評估下一位。"},
+  {who:"倒臥不動的傷者",walk:false,breath:0,airway:14,
+   look:{shirt:"#5b5f8a",pants:"#2d2d2d",marks:[],eyes:"closed"},
+   why:"打開呼吸道後恢復呼吸，代表呼吸道隨時可能再阻塞，要列為紅色立即處置。"},
+  {who:"小腿骨折的女學生",walk:false,walkLine:"腿…腿好像斷了！站不起來！",breath:20,refill:1.5,
+   look:{shirt:"#f5f5f5",pants:"#2c3e70",marks:[["deform","legB"]]},
+   why:"走不動，但呼吸、循環、意識都在正常範圍，屬於黃色：需要治療，但可以稍微等待。"},
+  {who:"背部燒燙傷的男子",walk:false,walkLine:"背好燙…好痛…起不來…",breath:22,refill:1.8,
+   look:{shirt:"#9b6b3a",pants:"#444",marks:[["burn","torso"]]},
+   why:"三項指標都沒超標，分為黃色。燒燙傷看起來嚴重，但檢傷只依照 START 標準判斷。"},
+  {who:"腹部疼痛的老先生",walk:false,walkLine:"肚子好痛…沒辦法站…",breath:24,
+   look:{shirt:"#a39b8b",pants:"#4d4336",marks:[["bruise","belly"]],skin:1},
+   why:"無法行走但生命徵象穩定，屬於黃色。之後要重新評估，因為腹部可能有內出血。"},
+  {who:"路旁發現的傷者",walk:false,breath:0,airway:0,pale:true,
+   look:{shirt:"#6e6e6e",pants:"#2a2a2a",marks:[["blood","head"]],eyes:"closed"},
+   why:"打開呼吸道後仍然沒有呼吸，在大量傷患時分為黑色。資源有限時，要優先救有機會存活的人。"}
+].map((c,i)=>Object.assign({breath:16,pulse:true,refill:1,obey:true,airway:0},c,{
+  look:Object.assign({skin:i%4},c.look)
+}));
+
+/* START 流程：回傳正確顏色 + 需要的檢查 */
+function start_(p){
+  const need=["walk"];
+  if(p.walk) return {a:"green",need};
+  need.push("breath");
+  if(p.breath===0){need.push("airway");return {a:p.airway>0?"red":"black",need}}
+  if(p.breath>30) return {a:"red",need};
+  need.push("circ");
+  if(!p.pulse||p.refill>2) return {a:"red",need};
+  need.push("mind");
+  if(!p.obey) return {a:"red",need};
+  return {a:"yellow",need};
+}
+const NEED_NAME={walk:"喊話看能否行走",breath:"看胸口數呼吸",airway:"打開呼吸道",circ:"摸脈搏或壓指甲",mind:"拍肩請他握手"};
+
+/* ---- 人形（俯視、平躺，頭在左） ---- */
+function mix(hex,to,t){const a=parseInt(hex.slice(1),16),b=parseInt(to.slice(1),16);
+  const r=(x,s)=>((x>>s)&255);const m=s=>Math.round(r(a,s)*(1-t)+r(b,s)*t);
+  return "#"+[16,8,0].map(s=>m(s).toString(16).padStart(2,"0")).join("")}
+const MARKPOS={head:[45,92],torso:[175,95],belly:[215,118],legT:[320,92],legB:[320,128],thighB:[270,128],handT:[226,48]};
+function mark([type,at]){
+  const [x,y]=MARKPOS[at];
+  switch(type){
+    case "blood":return `<path d="M${x-10} ${y-4} q6 -10 14 -3 q10 -2 6 9 q4 10 -8 8 q-10 6 -12 -4 q-8 -4 0 -10z" fill="#9e1b16" opacity=".9"/>`;
+    case "pool":return `<ellipse cx="${x}" cy="${y+22}" rx="34" ry="14" fill="#7d130f" opacity=".85"/><path d="M${x-12} ${y-6} q8 -8 18 0 q6 8 -4 12 q-12 4 -14 -12z" fill="#b01e18"/>`;
+    case "scrape":return `<g stroke="#b3443a" stroke-width="2" opacity=".85"><line x1="${x-12}" y1="${y-6}" x2="${x+10}" y2="${y-9}"/><line x1="${x-10}" y1="${y}" x2="${x+12}" y2="${y-3}"/><line x1="${x-8}" y1="${y+6}" x2="${x+9}" y2="${y+4}"/></g>`;
+    case "burn":return `<ellipse cx="${x}" cy="${y}" rx="30" ry="20" fill="#c2553a" opacity=".55"/><ellipse cx="${x+6}" cy="${y-2}" rx="14" ry="9" fill="#e9a07c" opacity=".7"/>`;
+    case "bruise":return `<ellipse cx="${x}" cy="${y}" rx="14" ry="10" fill="#5b3d7a" opacity=".55"/>`;
+    case "swell":return `<circle cx="${x}" cy="${y}" r="15" fill="#d9776a" opacity=".45"/>`;
+    case "dust":return `<g fill="#8f8574" opacity=".9"><circle cx="${x-10}" cy="${y-4}" r="6"/><circle cx="${x+4}" cy="${y+3}" r="8"/><circle cx="${x+16}" cy="${y-6}" r="5"/></g>`;
+    case "deform":return `<path d="M${x-14} ${y} l12 -9 l12 9" fill="none" stroke="#6b1f1a" stroke-width="3"/>`;
+  }
+  return "";
+}
+function figure(p){
+  const L=p.look; let skin=SKIN[L.skin]; if(p.pale) skin=mix(skin,"#dcd6cc",.6);
+  const hair=["#2b2118","#3a2a1e","#1a1a1a","#6b6b6b"][L.skin];
+  const eyes=L.eyes==="closed"?
+    `<path d="M60 96 q5 4 10 0 M60 122 q5 4 10 0" stroke="#3a2a1e" stroke-width="2" fill="none"/>`:
+    L.eyes==="half"?`<path d="M60 97 h10 M60 123 h10" stroke="#3a2a1e" stroke-width="3"/>`:
+    `<circle cx="66" cy="97" r="3" fill="#2a2418"/><circle cx="66" cy="123" r="3" fill="#2a2418"/>`;
+  const rate=p.breath; const anim=rate>0?`style="animation:breathe ${(60/rate).toFixed(2)}s ease-in-out infinite"`:"";
+  const hs=(id,x,y,r,label,px,py)=>`<g class="hs" data-act="${id}" tabindex="0" role="button" aria-label="${label}">
+    <circle class="ring" cx="${x}" cy="${y}" r="${r}"/>
+    <rect class="pill" x="${px-30}" y="${py-11}" width="60" height="22" rx="11"/>
+    <text class="pill-t" x="${px}" y="${py}">${label}</text></g>`;
+  return `<svg viewBox="0 0 420 222" role="img" aria-label="傷患平躺在地上">
+  <style>@keyframes breathe{50%{transform:scale(1.07,1.12)}}</style>
+  <ellipse cx="215" cy="190" rx="190" ry="14" fill="rgba(0,0,0,.18)"/>
+  ${L.marks.filter(m=>m[0]==="pool").map(mark).join("")}
+  <rect x="240" y="80" width="150" height="28" rx="12" fill="${L.pants}"/>
+  <rect x="240" y="114" width="150" height="28" rx="12" fill="${L.pants}"/>
+  <rect x="380" y="76" width="22" height="34" rx="8" fill="#2a2320"/>
+  <rect x="380" y="112" width="22" height="34" rx="8" fill="#2a2320"/>
+  <rect x="112" y="37" width="110" height="22" rx="10" fill="${skin}"/>
+  <rect x="112" y="37" width="46" height="22" rx="10" fill="${L.shirt}"/>
+  <rect x="112" y="163" width="110" height="22" rx="10" fill="${skin}"/>
+  <rect x="112" y="163" width="46" height="22" rx="10" fill="${L.shirt}"/>
+  <circle cx="228" cy="48" r="11" fill="${skin}"/><circle cx="228" cy="174" r="11" fill="${skin}"/>
+  <rect x="88" y="100" width="22" height="22" fill="${skin}"/>
+  <g class="chest" id="chest" ${anim}><rect x="100" y="58" width="150" height="106" rx="26" fill="${L.shirt}"/>
+  <path d="M110 111 h130" stroke="rgba(0,0,0,.12)" stroke-width="2"/></g>
+  <circle cx="45" cy="111" r="36" fill="${hair}"/>
+  <circle cx="56" cy="111" r="32" fill="${skin}"/>
+  ${eyes}<path d="M84 104 q3 7 0 14" stroke="#7a4a3a" stroke-width="2.5" fill="none"/>
+  ${L.marks.filter(m=>m[0]!=="pool").map(mark).join("")}
+  ${hs("mind",56,111,40,"拍肩",56,166)}
+  ${hs("breath",165,111,34,"看胸口",165,152)}
+  ${hs("pulse",212,174,20,"摸手腕",212,208)}
+  ${hs("refill",234,48,18,"壓指尖",234,16)}
+  </svg>`;
+}
+
+/* ---- 遊戲狀態 ---- */
+const $=id=>document.getElementById(id);
+const LIMIT=20;
+let deck=[],idx=0,score=0,right=0,mistakes=[],t=0,timer=null,locked=false,done=new Set(),cur=null;
+
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));window.scrollTo(0,0);
+  document.body.classList.toggle("playing",id==="game");if(id!=="game")book(false)}
+function book(open){
+  $("book").classList.toggle("open",open);$("bookShade").classList.toggle("open",open);
+  $("bookTab").setAttribute("aria-expanded",open);
+  if(open)$("bookTab").focus();
+}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function say(me,them){$("bubble").innerHTML=(me?`<div class="me">你：${me}</div>`:"")+(them||"")}
+
+function startGame(){deck=shuffle(CASES);idx=0;score=0;right=0;mistakes=[];$("score").textContent=0;show("game");deal()}
+
+function deal(){
+  cur=deck[idx];locked=false;done=new Set();
+  $("prog").textContent=`${idx+1}/${deck.length}`;
+  $("tagno").textContent="檢傷卡 NO. "+String(idx+1).padStart(3,"0");
+  $("who").textContent=cur.who;
+  $("fig").innerHTML=figure(cur);
+  ["walk","breath","circ","mind"].forEach(k=>$("l-"+k).textContent="—");
+  $("airway").classList.remove("show");
+  $("shout").classList.remove("done");
+  say("",'<span style="color:#777">現場很混亂，先從哪裡開始檢查？</span>');
+  const sc=$("scene");sc.style.transform="";$("stamp").style.opacity=0;
+  t=LIMIT;tick();clearInterval(timer);
+  timer=setInterval(()=>{t-=0.1;tick();if(t<=0)answer(null)},100);
+}
+function tick(){
+  $("bar").style.transform=`scaleX(${Math.max(t,0)/LIMIT})`;
+  $("bar").classList.toggle("low",t<6);
+  $("sec").textContent=Math.ceil(Math.max(t,0));
+}
+function markChecked(act){const g=document.querySelector(`.hs[data-act="${act}"]`);if(g)g.classList.add("checked")}
+
+function act(a){
+  if(locked)return; const p=cur;
+  if(a==="walk"){
+    done.add("walk");$("shout").classList.add("done");
+    if(p.walk){say("能走的人請走過來！",p.walkLine);$("l-walk").textContent="可以自己走過來"}
+    else{say("能走的人請走過來！",p.walkLine||"（沒有任何反應）");$("l-walk").textContent="無法行走"}
+  }
+  if(a==="breath"){
+    done.add("breath");markChecked("breath");
+    const r=done.has("airway")?p.airway:p.breath;
+    if(r===0){say("（看胸口起伏，聽呼吸聲…）","胸口完全沒有起伏，也聽不到呼吸聲。");$("l-breath").textContent="沒有呼吸";$("airway").classList.add("show")}
+    else{say("（看胸口起伏，數 15 秒再乘以 4…）",`呼吸大約每分鐘 <b>${r}</b> 次。`);$("l-breath").textContent=`每分鐘 ${r} 次`}
+  }
+  if(a==="airway"){
+    done.add("airway");$("airway").classList.remove("show");
+    if(p.airway>0){
+      say("（一手壓額頭，一手抬下巴，打開呼吸道）",`咳…！胸口開始起伏了，每分鐘約 <b>${p.airway}</b> 次。`);
+      $("l-breath").textContent=`開呼吸道後恢復，每分鐘 ${p.airway} 次`;
+      $("chest").style.animation=`breathe ${(60/p.airway).toFixed(2)}s ease-in-out infinite`;
+    }else{
+      say("（一手壓額頭，一手抬下巴，打開呼吸道）","等了幾秒，胸口仍然沒有任何起伏。");
+      $("l-breath").textContent="開呼吸道後仍無呼吸";
+    }
+  }
+  if(a==="pulse"){
+    done.add("circ");markChecked("pulse");
+    const txt=p.breath===0&&!(p.airway>0)?"摸不到任何脈搏。":p.pulse?"摸得到，跳動清楚。":"手腕冰冷，摸不到脈搏。";
+    say("（兩指按在手腕拇指側…）",txt);
+    addCirc(p.pulse&&!(p.breath===0&&!p.airway)?"手腕脈搏：摸得到":"手腕脈搏：摸不到");
+  }
+  if(a==="refill"){
+    done.add("circ");markChecked("refill");
+    const s=p.breath===0&&!p.airway?"沒有恢復":`${p.refill} 秒`;
+    say("（按壓指甲 5 秒後放開…）",s==="沒有恢復"?"指甲一直是白的，沒有恢復紅色。":`指甲大約 <b>${p.refill}</b> 秒後恢復紅色。`);
+    addCirc(`回填：${s}`);
+  }
+  if(a==="mind"){
+    done.add("mind");markChecked("mind");
+    const line=p.breath===0?"（完全沒有反應）":p.obey?(p.mindLine||"（用力握住你的手）聽…聽得到。"):p.mindLine;
+    say("聽得到嗎？聽得到就握我的手！",line);
+    $("l-mind").textContent=p.breath===0?"沒有反應":p.obey?"能聽從指令":"無法聽從指令";
+  }
+}
+function addCirc(s){const d=$("l-circ");const cur_=d.textContent==="—"?[]:d.textContent.split("｜");if(!cur_.some(x=>x.split("：")[0]===s.split("：")[0]))cur_.push(s);d.textContent=cur_.join("｜")}
+
+function answer(choice){
+  if(locked)return;locked=true;book(false);clearInterval(timer);
+  const {a,need}=start_(cur),ok=choice===a;
+  const missed=need.filter(n=>!done.has(n));
+  const extra=[...done].filter(n=>!need.includes(n)).length;
+  if(choice)flyOut(choice);
+  let pts=0,proc="";
+  if(ok){
+    pts=100+Math.round(Math.max(t,0)*5);
+    if(missed.length){pts=Math.round(pts/2);proc=`答對了，但你沒有做「${missed.map(m=>NEED_NAME[m]).join("、")}」就分類，這次算是猜中的，分數減半。`}
+    else if(extra){proc=`檢查完整！不過有 ${extra} 項檢查其實不需要做，找到決定性的結果就可以直接分類，省下的時間能救下一位。`}
+    else proc="檢查順序完美，沒有多做任何一步。";
+    score+=pts;right++;$("score").textContent=score;
+  }else{
+    mistakes.push({c:cur,choice,a});
+    proc=`正確流程：${need.map(m=>NEED_NAME[m]).join(" → ")}。`+(missed.length?`你漏掉了「${missed.map(m=>NEED_NAME[m]).join("、")}」。`:"");
+  }
+  setTimeout(()=>{
+    const v=$("verdict");v.className="verdict "+(ok?"ok":"bad");
+    v.textContent=ok?`判斷正確 +${pts}`:(choice?"判斷錯誤":"時間到了");
+    $("ans").innerHTML=`正確分類：<span class="dot" style="background:${COLORS[a].hex}"></span>${COLORS[a].name}`+(!ok&&choice?`　你選了：${COLORS[choice].short}`:"");
+    $("why").textContent=cur.why;$("proc").textContent=proc;
+    $("next").textContent=idx===deck.length-1?"看結果":"下一位傷患";
+    $("fb").classList.add("show");$("next").focus();
+  },choice?260:0);
+}
+function next(){$("fb").classList.remove("show");idx++;if(idx<deck.length)deal();else finish()}
+
+function finish(){
+  show("result");
+  $("final").textContent=score;
+  $("acc").textContent=`正確 ${right} / ${deck.length} 位`;
+  const p=right/deck.length;
+  $("grade").textContent=p===1?"全部正確！你已經能在壓力下依照 START 原則快速分類。":
+    p>=.8?"表現很好，檢傷觀念大致正確，看看下面錯的題目。":
+    p>=.5?"及格了，但有些關鍵步驟還不熟，建議再看一次檢傷原則。":"檢傷的順序還不太熟，先看一次 START 原則再挑戰。";
+  $("review").innerHTML=mistakes.length?"<h2>需要複習的傷患</h2>"+mistakes.map(({c,choice,a})=>
+    `<div class="item"><b>${c.who}</b><small>你選：${choice?COLORS[choice].short:"未作答"}　正確：${COLORS[a].short}</small><br>${c.why}</div>`).join(""):"";
+}
+
+function flyOut(c){const d={red:[1,0],green:[-1,0],yellow:[0,-1],black:[0,1]}[c];
+  $("scene").style.transform=`translate(${d[0]*650}px,${d[1]*700}px) rotate(${d[0]*20}deg)`}
+
+/* ---- 點擊 vs 拖曳 ---- */
+const scene=$("scene"),stamp=$("stamp");
+let sx=0,sy=0,down=false,moved=false,target=null,pid=null;
+function dirOf(dx,dy){if(Math.max(Math.abs(dx),Math.abs(dy))<90)return null;
+  return Math.abs(dx)>Math.abs(dy)?(dx>0?"red":"green"):(dy>0?"black":"yellow")}
+scene.addEventListener("pointerdown",e=>{
+  if(locked)return;down=true;moved=false;sx=e.clientX;sy=e.clientY;pid=e.pointerId;
+  const h=e.target.closest(".hs");target=h?h.dataset.act:null;
+});
+scene.addEventListener("pointermove",e=>{
+  if(!down)return;const dx=e.clientX-sx,dy=e.clientY-sy;
+  if(!moved&&Math.hypot(dx,dy)>10){moved=true;scene.classList.add("dragging");try{scene.setPointerCapture(pid)}catch(_){}}
+  if(!moved)return;
+  scene.style.transform=`translate(${dx}px,${dy}px) rotate(${dx/22}deg)`;
+  const d=dirOf(dx,dy);
+  if(d){stamp.style.background=COLORS[d].hex;stamp.style.color=d==="yellow"?"#2a2418":"#fff";stamp.textContent=COLORS[d].short;stamp.style.opacity=.85}
+  else stamp.style.opacity=0;
+});
+function up(e){
+  if(!down)return;down=false;scene.classList.remove("dragging");
+  if(!moved){if(target)act(target);return}
+  const d=dirOf(e.clientX-sx,e.clientY-sy);
+  if(d)answer(d);else{scene.style.transform="";stamp.style.opacity=0}
+}
+scene.addEventListener("pointerup",up);
+scene.addEventListener("pointercancel",()=>{if(down){down=false;scene.classList.remove("dragging");scene.style.transform="";stamp.style.opacity=0}});
+scene.addEventListener("keydown",e=>{const h=e.target.closest&&e.target.closest(".hs");if(h&&(e.key==="Enter"||e.key===" ")){e.preventDefault();act(h.dataset.act)}});
+
+$("shout").onclick=()=>act("walk");
+$("airway").onclick=()=>act("airway");
+document.querySelectorAll(".btns button").forEach(b=>b.addEventListener("click",()=>answer(b.dataset.c)));
+document.addEventListener("keydown",e=>{
+  if($("book").classList.contains("open")){if(e.key==="Escape")book(false);return}
+  if((e.key==="h"||e.key==="H")&&$("game").classList.contains("active")){book(true);return}
+  if($("fb").classList.contains("show")){if(e.key==="Enter"||e.key===" "){e.preventDefault();next()}return}
+  if(!$("game").classList.contains("active"))return;
+  const m={ArrowRight:"red",ArrowLeft:"green",ArrowUp:"yellow",ArrowDown:"black"}[e.key];
+  if(m){e.preventDefault();answer(m)}
+});
+$("bookTab").onclick=()=>book(!$("book").classList.contains("open"));$("bookShade").onclick=()=>book(false);
+$("go").onclick=startGame;$("again").onclick=startGame;$("next").onclick=next;
+$("rules").onclick=()=>show("start");
+</script>
+</body>
+</html>
