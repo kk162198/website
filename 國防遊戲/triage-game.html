@@ -246,6 +246,44 @@ body.playing .book{display:flex}
 #lbTitle{color:var(--tag-ink)}
 [hidden]{display:none!important}
 
+/* 新手教學：一次只亮一個要按的地方，用手指圖示帶著做 */
+.tut-open{flex:none;width:100%;margin-bottom:16px}
+.tut-f{display:none;pointer-events:none}
+.tut-f path{fill:#fff;stroke:#2a2418;stroke-width:1.4;stroke-linejoin:round}
+.tut-skip,.tut-swipe{display:none}
+body.tut .book,body.tut .book-shade{display:none!important}
+body.tut .timer{visibility:hidden}
+body.tut .tut-skip{display:block;position:fixed;left:0;right:0;bottom:calc(var(--sab) + 3px);margin:0 auto;width:max-content;z-index:12;
+  border:none;background:transparent;color:var(--muted-on-field);font-size:.85rem;font-weight:700;padding:6px 18px;min-height:30px}
+body.tut .hs:not(.tut-on){opacity:.28}
+body.tut .shout:not(.tut-on){opacity:.35}
+body.tut .btns button:not(.tut-on){opacity:.28}
+body.tut .hs.tut-on .ring{stroke:#ffe066;stroke-width:4;stroke-dasharray:none;fill:rgba(255,224,102,.3);animation:tutRing 1s ease-in-out infinite alternate}
+body.tut .hs.tut-on .tut-f{display:block;animation:tutX .8s ease-in-out infinite alternate}
+body.tut .shout.tut-on,body.tut .scene-air.tut-on,body.tut .btns .tut-on{position:relative;z-index:5;animation:tutGlow .8s ease-in-out infinite alternate}
+body.tut .shout.tut-on{border-color:#ffe066;border-style:solid}
+body.tut .scene-air.tut-on{z-index:5;position:absolute}
+body.tut .shout.tut-on::after,body.tut .scene-air.tut-on::after{content:"";position:absolute;left:50%;top:62%;width:44px;height:44px;margin-left:-16px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 1.5a2 2 0 0 1 2 2V10l5.8 1.2a2.8 2.8 0 0 1 2.2 2.7V17a5.5 5.5 0 0 1-5.5 5.5h-1.6a5.5 5.5 0 0 1-4.5-2.3L4.2 15.6a1.7 1.7 0 0 1 2.6-2.1l.2.2V3.5a2 2 0 0 1 2-2z' fill='%23fff' stroke='%232a2418' stroke-width='1.4' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45));pointer-events:none;animation:tutY .8s ease-in-out infinite alternate}
+body.tut .scene-air.tut-on::after{top:90%}
+@keyframes tutRing{to{fill:rgba(255,224,102,.55)}}
+@keyframes tutGlow{from{box-shadow:0 0 0 0 rgba(255,224,102,.9)}to{box-shadow:0 0 0 7px rgba(255,224,102,.35)}}
+@keyframes tutX{to{transform:translateX(9px)}}
+@keyframes tutY{to{transform:translateY(9px)}}
+body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0;top:4.6em;bottom:0;z-index:2;pointer-events:none}
+.ts-chip{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;white-space:nowrap;
+  background:rgba(20,22,16,.82);color:#fff;border-radius:999px;padding:6px 14px;font-weight:700;font-size:.95rem}
+.ts-chip i{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.75);flex:none}
+.ts-arrow{position:absolute;left:50%;top:55%;font:900 4.6rem/1 var(--num);transform:translate(calc(-50% + var(--dx)*62px),calc(-50% + var(--dy)*52px));
+  color:var(--c);text-shadow:0 0 3px #fff,0 0 3px #fff,0 2px 8px rgba(0,0,0,.5)}
+.ts-hand{position:absolute;left:50%;top:55%;width:52px;height:52px;margin:-6px 0 0 -20px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 1.5a2 2 0 0 1 2 2V10l5.8 1.2a2.8 2.8 0 0 1 2.2 2.7V17a5.5 5.5 0 0 1-5.5 5.5h-1.6a5.5 5.5 0 0 1-4.5-2.3L4.2 15.6a1.7 1.7 0 0 1 2.6-2.1l.2.2V3.5a2 2 0 0 1 2-2z' fill='%23fff' stroke='%232a2418' stroke-width='1.4' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45));animation:tutSwipe 1.5s ease-in-out infinite}
+@keyframes tutSwipe{0%{transform:translate(calc(var(--dx)*-30px),calc(var(--dy)*-24px));opacity:0}18%{opacity:1}
+  72%{transform:translate(calc(var(--dx)*95px),calc(var(--dy)*76px));opacity:1}100%{transform:translate(calc(var(--dx)*95px),calc(var(--dy)*76px));opacity:0}}
+#tutDone .verdict{text-align:center;margin:6px 0 18px}
+#tutDone .ghost{background:transparent;border-color:var(--tag-ink);color:var(--tag-ink)}
+@media (prefers-reduced-motion:reduce){body.tut .tut-on,body.tut .tut-on::after,body.tut .hs.tut-on .ring,body.tut .hs.tut-on .tut-f,.ts-hand{animation:none!important}}
+
 /* 橫向提示：這款遊戲為直向設計 */
 .rotate{position:fixed;inset:0;z-index:50;background:var(--field);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:20px;font-weight:700;font-size:1.1rem}
 .rotate i{font-style:normal;font-size:3rem;display:block;animation:rot 1.6s ease-in-out infinite}
@@ -261,6 +299,8 @@ body.playing .book{display:flex}
     檢傷分類<br>滑動救援
   </h1>
   <p class="lead">發生大量傷患事件，你是第一位到場的救護員。每局會從 50 位傷患中抽出 10 位，每位傷患你有 20 秒：親手檢查他的狀況，聽他怎麼回應，再決定該給哪一種顏色的檢傷卡。</p>
+
+  <button class="ghost tut-open" id="tutOpen">▶ 新手教學（跟著手指做一次）</button>
 
   <div class="panel">
     <h2>怎麼檢查</h2>
@@ -301,7 +341,7 @@ body.playing .book{display:flex}
 
 <section class="screen" id="game">
   <div class="hud">
-    <div><div class="k">傷患</div><div class="v" id="prog">1/10</div></div>
+    <div><div class="k" id="progK">傷患</div><div class="v" id="prog">1/10</div></div>
     <div style="text-align:center"><div class="k">剩餘秒數</div><div class="v" id="sec">20</div></div>
     <div style="text-align:right"><div class="k">分數</div><div class="v" id="score">0</div></div>
   </div>
@@ -315,6 +355,7 @@ body.playing .book{display:flex}
     <div class="name" id="who"></div>
     <div class="stamp" id="stamp"></div>
     <button class="scene-air" id="airway">打開呼吸道<small>壓額抬下巴</small></button>
+    <div class="tut-swipe" id="tutSwipe" hidden><div class="ts-chip"><span id="tsTip"></span><i id="tsDot"></i></div><div class="ts-arrow" id="tsArrow"></div><div class="ts-hand"></div></div>
   </div>
 
   <div class="log">
@@ -359,6 +400,7 @@ body.playing .book{display:flex}
   </div></div>
 </section>
 
+<button class="tut-skip" id="tutSkip">跳過教學 ›</button>
 <div class="book-shade" id="bookShade"></div>
 <aside class="book" id="book" aria-label="檢傷手冊">
   <div class="book-grip" id="bookTab" role="button" tabindex="0" aria-expanded="false" aria-controls="bookPage" aria-label="檢傷手冊（上滑或點一下打開）"><span class="lbl"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 7 L5 3 L9 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>檢傷手冊</span></div>
@@ -411,6 +453,16 @@ body.playing .book{display:flex}
   </div>
 </div>
 
+<div class="fb" id="tutDone" role="dialog" aria-modal="true" aria-labelledby="tutDoneT">
+  <div class="sheet">
+    <p class="verdict ok" id="tutDoneT">✓ 教學完成</p>
+    <div class="row">
+      <button class="ghost" id="tutAgain">再看一次</button>
+      <button class="primary" id="tutPlay">開始檢傷</button>
+    </div>
+  </div>
+</div>
+
 <div class="rotate" aria-hidden="true"><i>📱</i>請將手機轉回直向<br><small style="font-weight:400;opacity:.8">這個遊戲是為直向手機設計的</small></div>
 
 <script>
@@ -421,6 +473,8 @@ const COLORS={
   black:{name:"黑色（無生命徵象）",short:"黑",hex:"var(--black)"}
 };
 const SKIN=["#f0c9a4","#e8b98f","#d9a47a","#c68a5e"];
+/* 教學用的手指圖示（指尖朝上，指尖在 9,1.5） */
+const HAND="M9 1.5a2 2 0 0 1 2 2V10l5.8 1.2a2.8 2.8 0 0 1 2.2 2.7V17a5.5 5.5 0 0 1-5.5 5.5h-1.6a5.5 5.5 0 0 1-4.5-2.3L4.2 15.6a1.7 1.7 0 0 1 2.6-2.1l.2.2V3.5a2 2 0 0 1 2-2z";
 
 /* 每位傷患：外觀 + 各項檢查的真實狀況。正確答案由 START 規則自動算出。 */
 const CASES=[
@@ -646,7 +700,8 @@ function figure(p){
     <circle class="ring" cx="${x}" cy="${y}" r="${r}"/>
     <rect class="hit" x="${px-40}" y="${py-18}" width="80" height="36"/>
     <rect class="pill" x="${px-35}" y="${py-14}" width="70" height="28" rx="14"/>
-    <text class="pill-t" x="${px}" y="${py}">${label}</text></g>`;
+    <text class="pill-t" x="${px}" y="${py}">${label}</text>
+    <g class="tut-f"><g transform="translate(${x+r*.45},${y}) rotate(-90) scale(1.8) translate(-9,-1.5)"><path d="${HAND}"/></g></g></g>`;
   return `<svg viewBox="0 -2 420 226" preserveAspectRatio="xMidYMid meet" role="img" aria-label="傷患平躺在地上">
   <style>@keyframes breathe{50%{transform:scale(1.07,1.12)}}</style>
   <ellipse cx="215" cy="190" rx="190" ry="14" fill="rgba(0,0,0,.18)"/>
@@ -678,6 +733,7 @@ function figure(p){
 const $=id=>document.getElementById(id);
 const LIMIT=20;
 let deck=[],idx=0,score=0,right=0,mistakes=[],t=0,timer=null,locked=false,done=new Set(),cur=null;
+let tut=null; /* 教學進行中：{pi:第幾位, si:第幾步, play:結束後是否直接開始} */
 
 /* 手機震動回饋（Android 支援；iPhone 會自動忽略） */
 function buzz(p){try{if(navigator.vibrate)navigator.vibrate(p)}catch(_){}}
@@ -704,18 +760,21 @@ let hinted=false;
 function startGame(){if(!hinted){hinted=true;setTimeout(()=>$("book").classList.add("hint"),900)}deck=drawDeck();idx=0;score=0;right=0;mistakes=[];$("score").textContent=0;show("game");deal()}
 
 function deal(){
-  cur=deck[idx];locked=false;done=new Set();
-  $("prog").textContent=`${idx+1}/${deck.length}`;
-  $("tagno").textContent="檢傷卡 NO. "+String(idx+1).padStart(3,"0");
+  cur=tut?TUT[tut.pi].c:deck[idx];locked=false;done=new Set();
+  const no=tut?tut.pi:idx;
+  $("prog").textContent=`${no+1}/${tut?TUT.length:deck.length}`;
+  $("tagno").textContent="檢傷卡 NO. "+String(no+1).padStart(3,"0");
   $("who").textContent=cur.who;
   $("fig").innerHTML=figure(cur);
   ["walk","breath","circ","mind"].forEach(k=>$("l-"+k).textContent="—");
   $("airway").classList.remove("show");
   $("shout").classList.remove("done");
-  say("",idx===0?'<span style="color:#777">先<b>點身體</b>檢查，決定好就<b>把傷患往分類方向拖</b>，或按下方按鈕。</span>':'<span style="color:#777">現場很混亂，先從哪裡開始檢查？</span>');
+  say("",tut?"":idx===0?'<span style="color:#777">先<b>點身體</b>檢查，決定好就<b>把傷患往分類方向拖</b>，或按下方按鈕。</span>':'<span style="color:#777">現場很混亂，先從哪裡開始檢查？</span>');
   const sc=$("scene");sc.classList.add("dragging");sc.style.transform="";$("stamp").style.opacity=0;
   sc.classList.remove("enter");void sc.offsetWidth;sc.classList.add("enter");sc.classList.remove("dragging");
-  t=LIMIT;lastSec=LIMIT;tick();runTimer();
+  t=LIMIT;lastSec=LIMIT;tick();
+  if(tut){clearInterval(timer);$("sec").textContent="∞";tutStep();return} /* 教學不計時 */
+  runTimer();
 }
 /* 用實際經過時間計時：切到背景（來電、通知）時自動暫停，回來再繼續 */
 let lastTs=0,lastSec=LIMIT;
@@ -736,16 +795,18 @@ function tick(){
 document.addEventListener("visibilitychange",()=>{
   if(!$("game").classList.contains("active"))return;
   if(document.hidden)clearInterval(timer);
-  else{keepAwake(true);if(!locked)runTimer()}
+  else{keepAwake(true);if(!locked&&!tut)runTimer()}
 });
 function markChecked(act){const g=document.querySelector(`.hs[data-act="${act}"]`);if(g)g.classList.add("checked")}
 
 function act(a){
   if(locked)return; const p=cur;
+  if(tut&&a!==tutWant())return; /* 教學中只接受目前指示的那一步 */
   buzz(8);
   const before={};["walk","breath","circ","mind"].forEach(k=>before[k]=$("l-"+k).textContent);
   act_(a,p);
   ["walk","breath","circ","mind"].forEach(k=>{const d=$("l-"+k);if(d.textContent!==before[k]){d.classList.remove("new");void d.offsetWidth;d.classList.add("new")}});
+  if(tut){tut.si++;tutStep()}
 }
 function act_(a,p){
   if(a==="walk"){
@@ -792,7 +853,8 @@ function act_(a,p){
 function addCirc(s){const d=$("l-circ");const cur_=d.textContent==="—"?[]:d.textContent.split("｜");if(!cur_.some(x=>x.split("：")[0]===s.split("：")[0]))cur_.push(s);d.textContent=cur_.join("｜")}
 
 function answer(choice){
-  if(locked)return;locked=true;book(false);clearInterval(timer);
+  if(locked)return;if(tut){tutAnswer(choice);return}
+  locked=true;book(false);clearInterval(timer);
   const {a,need}=start_(cur),ok=choice===a;
   const missed=need.filter(n=>!done.has(n));
   const extra=[...done].filter(n=>!need.includes(n)).length;
@@ -935,7 +997,7 @@ $("airway").onclick=()=>act("airway");
 document.querySelectorAll(".btns button").forEach(b=>b.addEventListener("click",()=>answer(b.dataset.c)));
 document.addEventListener("keydown",e=>{
   if($("book").classList.contains("open")){if(e.key==="Escape")book(false);return}
-  if((e.key==="h"||e.key==="H")&&$("game").classList.contains("active")){book(true);return}
+  if((e.key==="h"||e.key==="H")&&!tut&&$("game").classList.contains("active")){book(true);return}
   if($("fb").classList.contains("show")){if(e.key==="Enter"||e.key===" "){e.preventDefault();next()}return}
   if(!$("game").classList.contains("active")||locked)return;
   const m={ArrowRight:"red",ArrowLeft:"green",ArrowUp:"yellow",ArrowDown:"black"}[e.key];
@@ -957,7 +1019,60 @@ $("bookTab").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.p
     if(Math.abs(dy)<8)book(!open);else if(!open&&dy<-40)book(true);else if(open&&dy>60)book(false);else book(open)};
   g.addEventListener("pointerup",end);g.addEventListener("pointercancel",end);
 })();
-$("go").onclick=startGame;$("again").onclick=startGame;$("next").onclick=next;
+
+/* ---- 新手教學 ----
+   四位固定的練習傷患，剛好走過四種顏色與所有檢查動作。不計時、不計分。
+   每一步只亮一個目標並放上手指圖示；其他操作一律不接受。 */
+const TUT_BASE={breath:16,pulse:true,refill:1,obey:true,airway:0,why:""};
+const TUT=[
+  {tip:"能走",steps:["walk"],
+   c:{who:"練習 1",walk:true,walkLine:"我可以走。",look:{skin:0,shirt:"#4a6fa5",pants:"#2f3a4a",marks:[["scrape","legB"]]}}},
+  {tip:"呼吸超過 30 次",steps:["walk","breath"],
+   c:{who:"練習 2",walk:false,walkLine:"（喘得說不出話）",breath:36,look:{skin:1,shirt:"#b0567a",pants:"#3b3b3b",marks:[["blood","torso"]]}}},
+  {tip:"開呼吸道仍沒呼吸",steps:["walk","breath","airway"],
+   c:{who:"練習 3",walk:false,walkLine:"（沒有任何反應）",breath:0,airway:0,pale:true,look:{skin:2,shirt:"#8a8a80",pants:"#5a5040",marks:[],eyes:"closed"}}},
+  {tip:"檢查都正常",steps:["walk","breath","pulse","mind"],
+   c:{who:"練習 4",walk:false,walkLine:"我的腿…站不起來。",breath:20,look:{skin:3,shirt:"#6b8e4e",pants:"#4a3f35",marks:[["deform","legT"]]}}}
+];
+TUT.forEach(x=>x.c=Object.assign({},TUT_BASE,x.c));
+const TUT_DIR={red:[1,0,"→"],green:[-1,0,"←"],yellow:[0,-1,"↑"],black:[0,1,"↓"]};
+function tutSeen(){try{return localStorage.getItem("triageTut")==="1"}catch(_){return false}}
+function tutWant(){return TUT[tut.pi].steps[tut.si]||"swipe"}
+function tutClear(){document.querySelectorAll(".tut-on").forEach(e=>e.classList.remove("tut-on"));$("tutSwipe").hidden=true}
+function tutStart(play){
+  tut={pi:0,si:0,play:!!play};document.body.classList.add("tut");$("tutDone").classList.remove("show");
+  $("progK").textContent="教學";$("score").textContent="—";show("game");deal();
+}
+function tutStep(){
+  tutClear();const w=tutWant();
+  if(w==="swipe"){
+    const c=start_(cur).a,d=TUT_DIR[c],sw=$("tutSwipe");
+    sw.style.setProperty("--dx",d[0]);sw.style.setProperty("--dy",d[1]);sw.style.setProperty("--c",COLORS[c].hex);
+    $("tsTip").textContent=TUT[tut.pi].tip;$("tsDot").style.background=COLORS[c].hex;$("tsArrow").textContent=d[2];
+    sw.hidden=false;document.querySelector(`.btns [data-c="${c}"]`).classList.add("tut-on");
+  }else (w==="walk"?$("shout"):w==="airway"?$("airway"):document.querySelector(`.hs[data-act="${w}"]`)).classList.add("tut-on");
+}
+function tutAnswer(choice){
+  /* 還沒檢查完、或方向不對：彈回原位，讓指示繼續帶 */
+  if(tutWant()!=="swipe"||choice!==start_(cur).a){scene.style.transform="";stamp.style.opacity=0;buzz(40);return}
+  locked=true;tutClear();flyOut(choice);buzz([20,40,20]);
+  const me=tut;
+  setTimeout(()=>{
+    if(tut!==me)return;
+    tut.pi++;tut.si=0;
+    if(tut.pi<TUT.length)deal();else{tutExit();$("tutDone").classList.add("show");$("tutPlay").focus({preventScroll:true})}
+  },520);
+}
+function tutExit(){
+  tut=null;tutClear();document.body.classList.remove("tut");$("progK").textContent="傷患";
+  try{localStorage.setItem("triageTut","1")}catch(_){}
+}
+$("tutOpen").onclick=()=>tutStart(false);
+$("tutAgain").onclick=()=>tutStart(true);
+$("tutPlay").onclick=()=>{$("tutDone").classList.remove("show");startGame()};
+$("tutSkip").onclick=()=>{const play=tut&&tut.play;tutExit();if(play)startGame();else show("start")};
+/* 第一次按「開始檢傷」先帶一次教學，之後直接開始 */
+$("go").onclick=()=>tutSeen()?startGame():tutStart(true);$("again").onclick=startGame;$("next").onclick=next;
 $("rules").onclick=()=>show("start");
 </script>
 </body>
