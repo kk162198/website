@@ -5,7 +5,7 @@
 create table if not exists public.triage_scores (
   id         bigint generated always as identity primary key,
   name       text        not null check (char_length(name) between 1 and 12),
-  score      integer     not null check (score between 0 and 2000),  -- 10 題 × 每題最高 200 分
+  score      integer     not null check (score between 0 and 2000),  -- 上限；含連續答對加成，整局實際最高 1984 分
   correct    integer     not null check (correct between 0 and 10),
   created_at timestamptz not null default now()
 );

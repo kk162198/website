@@ -224,6 +224,29 @@ body.playing .book{display:flex}
 .book .swatches div{display:flex;align-items:center;gap:6px;padding:7px 8px;background:rgba(255,255,255,.45);border-radius:6px}
 .book .swatches i{width:14px;height:14px;border-radius:3px;flex:none}
 
+/* 答對回饋與連續答對 */
+.combo{display:inline-block;margin-right:6px;padding:1px 7px;border-radius:999px;background:var(--yellow);color:#2a2418;font-weight:900;font-size:.72rem;line-height:1.5;vertical-align:middle}
+.combo.pop{animation:comboPop .45s cubic-bezier(.2,1.6,.4,1)}
+@keyframes comboPop{from{transform:scale(.4);opacity:0}}
+.hud .v.bump{animation:bump .45s ease-out;transform-origin:right center}
+@keyframes bump{40%{transform:scale(1.25);color:#b9e6a0}}
+.burst{position:fixed;left:50%;top:38%;z-index:30;pointer-events:none;opacity:0;transform:translate(-50%,-50%);text-align:center;color:#fff;
+  font-weight:900;text-shadow:0 2px 10px rgba(0,0,0,.55);white-space:nowrap}
+.burst b{display:grid;place-items:center;width:92px;height:92px;margin:0 auto 8px;border-radius:50%;background:var(--green);font-size:3.2rem;line-height:1;
+  box-shadow:0 0 0 8px rgba(63,143,70,.35),0 8px 24px rgba(0,0,0,.4)}
+.burst span{display:block;font-size:1.25rem}
+.burst em{display:block;font-style:normal;font-family:var(--num);font-size:2rem;color:#ffe27a;line-height:1.1}
+.burst.hot b{background:#d9731a;box-shadow:0 0 0 8px rgba(217,115,26,.35),0 8px 24px rgba(0,0,0,.4)}
+.burst.go{animation:burst 1.05s ease-out both}
+@keyframes burst{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}30%{transform:translate(-50%,-50%) scale(1)}
+  72%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-70%) scale(1)}}
+.pts{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.pts span{padding:3px 10px;border-radius:999px;background:rgba(0,0,0,.08);font-weight:700;font-size:.88rem}
+.pts .x{background:#d9731a;color:#fff}
+.pts .lost{background:rgba(200,48,42,.14);color:var(--red)}
+@media (prefers-reduced-motion:reduce){.combo.pop,.hud .v.bump{animation:none}.burst.go{animation:burstFade 1.05s linear both}}
+@keyframes burstFade{0%,100%{opacity:0}15%,75%{opacity:1}}
+
 /* feedback */
 .fb{position:fixed;inset:0;background:rgba(15,18,12,.72);display:none;align-items:flex-end;justify-content:center;z-index:20}
 .fb.show{display:flex}
@@ -354,7 +377,7 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
     <div><b style="color:#9a9a9a">↓</b>下滑：黑色 無生命徵象</div>
   </div>
 
-  <p class="note">小技巧：檢查照 START 的順序做，一找到決定性的結果就可以分類，不需要全部檢查。內容依照 START 檢傷分類法編寫，報告前請對照課本確認。</p>
+  <p class="note">小技巧：檢查照 START 的順序做，一找到決定性的結果就可以分類，不需要全部檢查。答得越快分數越高，<b>連續答對</b>還有加成（最高 ×1.3）。內容依照 START 檢傷分類法編寫，報告前請對照課本確認。</p>
   <div class="dock"><div class="row">
     <button class="primary" id="go">開始檢傷</button>
   </div></div>
@@ -364,7 +387,7 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
   <div class="hud">
     <div><div class="k" id="progK">傷患</div><div class="v" id="prog">1/10</div></div>
     <div style="text-align:center"><div class="k">剩餘秒數</div><div class="v" id="sec">20</div></div>
-    <div style="text-align:right"><div class="k">分數</div><div class="v" id="score">0</div></div>
+    <div style="text-align:right"><div class="k"><span class="combo" id="combo" hidden></span>分數</div><div class="v" id="score">0</div></div>
   </div>
   <div class="timer"><i id="bar"></i></div>
 
@@ -456,9 +479,11 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
   </div>
 </aside>
 
+<div class="burst" id="burst" aria-hidden="true"><b>✓</b><span id="burstT"></span><em id="burstP"></em></div>
 <div class="fb" id="fb" role="dialog" aria-modal="true" aria-labelledby="verdict">
   <div class="sheet">
     <p class="verdict" id="verdict"></p>
+    <div class="pts" id="pts" hidden></div>
     <p class="ans" id="ans"></p>
     <p class="why" id="why"></p>
     <p class="proc" id="proc"></p>
@@ -754,6 +779,31 @@ function figure(p){
 const $=id=>document.getElementById(id);
 const LIMIT=20;
 let deck=[],idx=0,score=0,right=0,mistakes=[],t=0,timer=null,locked=false,done=new Set(),cur=null;
+/* 計分：每題 基本 100 + 速度（剩餘秒數×3，最高 60），再乘上連續答對加成。
+   連續第 2/3/4 位起為 ×1.1/×1.2/×1.3（上限）。整局最高 160×12.4=1984，不超過排行榜上限 2000。 */
+const BASE=100,SPEED=3,COMBO_MAX=3;
+let streak=0,bestStreak=0,comboPts=0,scoreAnim=0;
+const comboStep=n=>Math.min(Math.max(n-1,0),COMBO_MAX);          /* 0~3 → ×1.0~×1.3 */
+const multTxt=n=>"×1."+comboStep(n);
+function showCombo(pop){
+  const c=$("combo");c.hidden=!!tut||streak<2;c.textContent=`🔥 ${streak} 連對`;
+  if(pop&&!c.hidden){c.classList.remove("pop");void c.offsetWidth;c.classList.add("pop")}
+}
+/* 分數跳動上升 */
+function setScore(to){
+  const el=$("score"),from=parseInt(el.textContent,10)||0,me=++scoreAnim,t0=performance.now();
+  if(to<=from||matchMedia("(prefers-reduced-motion:reduce)").matches){el.textContent=to;return}
+  el.classList.remove("bump");void el.offsetWidth;el.classList.add("bump");
+  (function step(now){
+    if(me!==scoreAnim)return;
+    const k=Math.min((now-t0)/500,1);el.textContent=Math.round(from+(to-from)*k);
+    if(k<1)requestAnimationFrame(step);else el.textContent=to;
+  })(t0);
+}
+function burst(label,pts,hot){
+  const b=$("burst");$("burstT").textContent=label;$("burstP").textContent="+"+pts;
+  b.classList.toggle("hot",hot);b.classList.remove("go");void b.offsetWidth;b.classList.add("go");
+}
 let tut=null; /* 教學進行中：{pi:第幾位, si:第幾步, play:結束後是否直接開始} */
 
 /* 手機震動回饋（Android 支援；iPhone 會自動忽略） */
@@ -779,7 +829,7 @@ function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor
 function say(me,them){$("bubble").innerHTML=(me?`<div class="me">你：${me}</div>`:"")+(them||"")}
 
 let hinted=false;
-function startGame(){if(!hinted){hinted=true;setTimeout(()=>$("book").classList.add("hint"),900)}deck=drawDeck();idx=0;score=0;right=0;mistakes=[];$("score").textContent=0;show("game");deal()}
+function startGame(){if(!hinted){hinted=true;setTimeout(()=>$("book").classList.add("hint"),900)}deck=drawDeck();idx=0;score=0;right=0;mistakes=[];streak=0;bestStreak=0;comboPts=0;scoreAnim++;$("score").textContent=0;show("game");deal()}
 
 function deal(){
   cur=tut?TUT[tut.pi].c:deck[idx];locked=false;done=new Set();
@@ -791,6 +841,7 @@ function deal(){
   ["walk","breath","circ","mind"].forEach(k=>$("l-"+k).textContent="—");
   $("airway").classList.remove("show");
   $("shout").classList.remove("done");
+  showCombo(false);
   say("",tut?"":idx===0?'<span style="color:#777">先<b>點身體</b>檢查，決定好就<b>把傷患往分類方向拖</b>，或按下方按鈕。</span>':'<span style="color:#777">現場很混亂，先從哪裡開始檢查？</span>');
   const sc=$("scene");sc.classList.add("dragging");sc.style.transform="";$("stamp").style.opacity=0;
   sc.classList.remove("enter");void sc.offsetWidth;sc.classList.add("enter");sc.classList.remove("dragging");
@@ -881,15 +932,29 @@ function answer(choice){
   const missed=need.filter(n=>!done.has(n));
   const extra=[...done].filter(n=>!need.includes(n)).length;
   if(choice)flyOut(choice);
-  buzz(ok?[20,40,20]:[80,50,80]);
-  let pts=0,proc="";
+  let pts=0,proc="",chips="";
+  const was=streak,chip=(txt,cls)=>`<span${cls?` class="${cls}"`:""}>${txt}</span>`;
   if(ok){
-    pts=100+Math.round(Math.max(t,0)*5);
-    if(missed.length){pts=Math.round(pts/2);proc=`答對了，但你沒有做「${missed.map(m=>NEED_NAME[m]).join("、")}」就分類，這次算是猜中的，分數減半。`}
-    else if(extra){proc=`檢查完整！不過有 ${extra} 項檢查其實不需要做，找到決定性的結果就可以直接分類，省下的時間能救下一位。`}
-    else proc="檢查順序完美，沒有多做任何一步。";
-    score+=pts;right++;$("score").textContent=score;
+    const speed=Math.round(Math.max(t,0)*SPEED),raw=BASE+speed;
+    chips=chip("基本 "+BASE)+chip("速度 +"+speed);
+    if(missed.length){
+      /* 猜中的：分數減半，不累計連續答對（也不中斷） */
+      pts=Math.round(raw/2);chips+=chip("猜中 ÷2");
+      proc=`答對了，但你沒有做「${missed.map(m=>NEED_NAME[m]).join("、")}」就分類，這次算是猜中的，分數減半，也不算進連續答對。`;
+    }else{
+      streak++;bestStreak=Math.max(bestStreak,streak);
+      pts=Math.round(raw*(10+comboStep(streak))/10);comboPts+=pts-raw;
+      if(streak>=2)chips+=chip(`🔥 ${streak} 連對 ${multTxt(streak)}`,"x");
+      proc=extra?`檢查完整！不過有 ${extra} 項檢查其實不需要做，找到決定性的結果就可以直接分類，省下的時間能救下一位。`:"檢查順序完美，沒有多做任何一步。";
+      if(streak<=COMBO_MAX&&idx<deck.length-1)proc+=` 下一位再答對，分數 ${multTxt(streak+1)}。`;
+      burst(streak>=2?`${streak} 連對！${multTxt(streak)}`:"判斷正確！",pts,streak>=2);
+    }
+    buzz(streak>=3&&!missed.length?[20,40,20,40,50]:[20,40,20]);
+    score+=pts;right++;setScore(score);showCombo(true);
   }else{
+    buzz([80,50,80]);
+    streak=0;showCombo(false);
+    if(was>=2)chips=chip(`連續答對 ${was} 位中斷`,"lost");
     mistakes.push({c:cur,choice,a});
     proc=`正確流程：${need.map(m=>NEED_NAME[m]).join(" → ")}。`+(missed.length?`你漏掉了「${missed.map(m=>NEED_NAME[m]).join("、")}」。`:"");
   }
@@ -897,6 +962,7 @@ function answer(choice){
     const v=$("verdict");v.className="verdict "+(ok?"ok":"bad");
     v.textContent=ok?`判斷正確 +${pts}`:(choice?"判斷錯誤":"時間到了");
     $("ans").innerHTML=`正確分類：<span class="dot" style="background:${COLORS[a].hex}"></span>${COLORS[a].name}`+(!ok&&choice?`　你選了：${COLORS[choice].short}`:"");
+    $("pts").innerHTML=chips;$("pts").hidden=!chips;
     $("why").textContent=cur.why;$("proc").textContent=proc;
     $("next").textContent=idx===deck.length-1?"看結果":"下一位傷患";
     $("fb").classList.add("show");$("fb").querySelector(".sheet").scrollTop=0;
@@ -908,8 +974,8 @@ function next(){if($("next").disabled)return;$("fb").classList.remove("show");id
 
 function finish(){
   show("result");
-  $("final").textContent=score;
-  $("acc").textContent=`正確 ${right} / ${deck.length} 位`;
+  $("final").textContent=score;$("combo").hidden=true;
+  $("acc").textContent=`正確 ${right} / ${deck.length} 位`+(bestStreak>=2?`　最高連續答對 ${bestStreak} 位（加成 +${comboPts} 分）`:"");
   const p=right/deck.length;
   $("grade").textContent=p===1?"全部正確！你已經能在壓力下依照 START 原則快速分類。":
     p>=.8?"表現很好，檢傷觀念大致正確，看看下面錯的題目。":
