@@ -49,7 +49,64 @@ order by name, score desc, created_at asc;
 
 grant select on public.triage_leaderboard to anon, authenticated;
 
--- 讓 API 立刻認得新欄位
+-- 4. 頒獎狀態：stats.html 的頒獎台每揭曉一位就寫進這裡，手機領獎頁 award.html 只讀得到「已經揭曉」的名次
+--    資料表本身不開放讀寫，只能透過下面兩個函式存取。
+create table if not exists public.triage_award (
+  id         integer     primary key check (id = 1),   -- 只有一列
+  pass_hash  text,                                      -- 頒獎密碼的 SHA-256；第一次在 stats.html 輸入的密碼會存進來
+  revealed   integer     not null default 0,            -- 已揭曉幾位（從最後一名往前數）
+  winners    jsonb,                                     -- 按下「開始頒獎」時固定下來的得獎名單
+  updated_at timestamptz not null default now()
+);
+alter table public.triage_award enable row level security;
+revoke all on public.triage_award from anon, authenticated;
+
+-- 4a. 讀取：只回傳已揭曉的名次
+create or replace function public.triage_award_state()
+returns json language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'ready',    a.pass_hash is not null,
+    'total',    coalesce(jsonb_array_length(a.winners), 0),
+    'revealed', coalesce(a.revealed, 0),
+    'winners',  (select coalesce(jsonb_agg(e.v order by e.i), '[]'::jsonb)
+                 from jsonb_array_elements(coalesce(a.winners, '[]'::jsonb)) with ordinality as e(v, i)
+                 where e.i > jsonb_array_length(a.winners) - a.revealed))
+  from (select 1) x left join public.triage_award a on a.id = 1;
+$$;
+
+-- 4b. 寫入：需要頒獎密碼（資料庫裡還沒有密碼時，第一次輸入的就成為正式密碼）
+create or replace function public.triage_award_set(p_pass text, p_revealed integer, p_winners jsonb default null)
+returns json language plpgsql security definer set search_path = public as $$
+declare
+  h text := encode(sha256(convert_to(coalesce(p_pass, ''), 'UTF8')), 'hex');
+  old text;
+begin
+  if char_length(coalesce(p_pass, '')) < 4 then raise exception 'short_pass'; end if;
+  if p_winners is not null and (jsonb_typeof(p_winners) <> 'array' or jsonb_array_length(p_winners) > 20) then
+    raise exception 'bad_winners';
+  end if;
+  insert into public.triage_award (id) values (1) on conflict (id) do nothing;
+  select pass_hash into old from public.triage_award where id = 1 for update;
+  if old is not null and old <> h then raise exception 'bad_pass'; end if;
+  update public.triage_award
+     set pass_hash  = h,
+         winners    = coalesce(p_winners, winners),
+         revealed   = greatest(0, least(coalesce(p_revealed, 0), coalesce(jsonb_array_length(coalesce(p_winners, winners)), 0))),
+         updated_at = now()
+   where id = 1;
+  return json_build_object('ok', true);
+end;
+$$;
+
+revoke all on function public.triage_award_state() from public;
+revoke all on function public.triage_award_set(text, integer, jsonb) from public;
+grant execute on function public.triage_award_state() to anon, authenticated;
+grant execute on function public.triage_award_set(text, integer, jsonb) to anon, authenticated;
+
+-- 忘記頒獎密碼、或想把領獎頁恢復成「尚未揭曉」時執行（之後第一次輸入的密碼會成為新密碼）：
+--   update public.triage_award set pass_hash = null, revealed = 0, winners = null;
+
+-- 讓 API 立刻認得新欄位與新函式
 notify pgrst, 'reload schema';
 
 -- 想清空排行榜時執行：  truncate table public.triage_scores;

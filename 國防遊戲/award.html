@@ -88,44 +88,72 @@ async function myHash(){
   const d=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(k));
   return Array.from(new Uint8Array(d),b=>b.toString(16).padStart(2,"0")).join("");
 }
-let tick=null;
+let tick=null,poll=null,lastKey="";
 function card(title,html){const c=el("div","card");c.appendChild(el("h1","",title));const p=el("p");p.append(...html);c.appendChild(p);return c}
-async function check(){
-  const out=$("out");clearInterval(tick);
-  out.textContent="";out.appendChild(el("p","msg","確認中…"));
-  let rows;
-  try{
-    const q="&order=score.desc,created_at.asc&limit=1000";
-    /* 資料庫還沒加 claim 欄位時，退回只比對暱稱 */
-    try{rows=await api("triage_leaderboard?select=name,score,correct,claim"+q)}
-    catch(_){rows=await api("triage_leaderboard?select=name,score,correct"+q)}
-  }catch(_){
-    out.textContent="";out.appendChild(card("讀取不到排行榜",["請檢查網路後按「重新確認」。"]));return;
-  }
-  const name=ls("triageName"),hash=await myHash().catch(()=>"");
-  let i=hash?rows.findIndex(r=>r.claim&&r.claim===hash):-1,strong=i>=0;
-  if(i<0&&name)i=rows.findIndex(r=>!r.claim&&r.name===name);
-  out.textContent="";
-  if(i>=0&&i<WINNERS){
-    const r=rows[i],rank=i+1,c=el("div","cert");
-    const rk=el("div","rank");rk.append("第",el("b","",String(rank)),"名");
-    const pts=el("div","pts",Number(r.score).toLocaleString("en-US"));pts.appendChild(el("small","","分"));
-    const clock=el("div","clock");
-    const run=()=>{clock.textContent=new Date().toLocaleString("zh-TW",{hour12:false});clock.appendChild(el("small","","時間會跳動＝這是現場畫面，不是截圖"))};
-    c.append(el("div","medal",MEDAL[rank]),rk,el("div","name",r.name),pts,el("div","ok","答對 "+r.correct+" 位"),
-      el("div","ver"+(strong?"":" weak"),strong?"✓ 這支手機驗證通過":"暱稱相符（舊成績，無法驗證手機）"),clock);
-    run();tick=setInterval(run,1000);
-    out.append(c,el("p","tell","恭喜！請把這個畫面拿給頒獎的同學看，就可以領禮物。"));
-  }else if(i>=0){
-    const r=rows[i];
-    out.appendChild(card("這次沒有進前 "+WINNERS+" 名",["「",el("b","",r.name),"」目前排第 ",el("b","",String(i+1))," 名（",el("b","",Number(r.score).toLocaleString("en-US"))," 分）。再挑戰一次，說不定就擠進去了！"]));
-  }else if(name){
-    out.appendChild(card("找不到這支手機的成績",["排行榜上「",el("b","",name),"」的最高分不是用這支手機送出的，或成績還沒送出。請用當時玩遊戲的手機和瀏覽器打開這一頁。"]));
-  }else{
-    out.appendChild(card("這支手機還沒有成績",["要先玩一局並送出成績才會上榜。如果你已經玩過，請用當時玩遊戲的手機和瀏覽器打開這一頁。"]));
-  }
+/* key 相同就不重畫，避免每 3 秒輪詢時畫面閃動 */
+function put(key,build){
+  if(key===lastKey)return;lastKey=key;
+  clearInterval(tick);const out=$("out");out.textContent="";build(out);
 }
-$("again").onclick=check;
+function cert(out,r,rank,strong){
+  const c=el("div","cert");
+  const rk=el("div","rank");rk.append("第",el("b","",String(rank)),"名");
+  const pts=el("div","pts",Number(r.score).toLocaleString("en-US"));pts.appendChild(el("small","","分"));
+  const clock=el("div","clock");
+  const run=()=>{clock.textContent=new Date().toLocaleString("zh-TW",{hour12:false});clock.appendChild(el("small","","時間會跳動＝這是現場畫面，不是截圖"))};
+  c.append(el("div","medal",MEDAL[rank]||"🎖️"),rk,el("div","name",r.name),pts,el("div","ok","答對 "+r.correct+" 位"),
+    el("div","ver"+(strong?"":" weak"),strong?"✓ 這支手機驗證通過":"暱稱相符（舊成績，無法驗證手機）"),clock);
+  run();tick=setInterval(run,1000);
+  out.append(c,el("p","tell","恭喜！請把這個畫面拿給頒獎的同學看，就可以領禮物。"));
+  try{navigator.vibrate&&navigator.vibrate([120,80,240])}catch(_){}
+}
+/* 頒獎狀態：stats.html 的頒獎台每揭曉一位就寫進資料庫，這裡只拿得到「已經揭曉」的名次，
+   所以揭曉之前誰也看不到自己有沒有得獎。回傳 null＝資料庫還沒安裝這個功能（尚未重跑 supabase-setup.sql）。 */
+async function awardState(){
+  const r=await fetch(SUPABASE_URL+"/rest/v1/rpc/triage_award_state",{method:"POST",
+    headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"},body:"{}"});
+  if(r.status===404)return null;
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  return r.json();
+}
+async function check(){
+  clearTimeout(poll);
+  if(!lastKey)put("load",o=>o.appendChild(el("p","msg","確認中…")));
+  try{
+    const st=await awardState();
+    if(st===null)await legacy();else await gated(st);
+  }catch(_){
+    put("err",o=>o.appendChild(card("讀取不到資料",["請檢查網路，稍後會自動再試一次。"])));
+  }
+  if(!document.hidden)poll=setTimeout(check,3000);
+}
+async function gated(st){
+  const ws=st.winners||[],total=st.total||0,rev=st.revealed||0;
+  const name=ls("triageName"),hash=await myHash().catch(()=>"");
+  let w=hash?ws.find(r=>r.claim&&r.claim===hash):null;const strong=!!w;
+  if(!w&&name)w=ws.find(r=>!r.claim&&r.name===name);
+  if(w)put("win|"+w.rank+"|"+w.name+"|"+w.score+"|"+strong,o=>cert(o,w,w.rank,strong));
+  else if(!total||!rev)put("wait",o=>o.appendChild(card("⏳ 頒獎還沒開始",["得獎名單會在頒獎台上一位一位揭曉。",el("br"),"揭曉後這個畫面會",el("b","","自動更新"),"，不用重新整理。"])));
+  else if(rev<total)put("mid|"+rev,o=>o.appendChild(card("🥁 揭曉中…",["已經揭曉到第 ",el("b","",String(total-rev+1))," 名。",el("br"),"如果你得獎，輪到你的名次時這裡會自動出現得獎畫面。"])));
+  else if(name&&ws.some(r=>r.name===name))put("other",o=>o.appendChild(card("找不到這支手機的成績",["得獎的「",el("b","",name),"」不是用這支手機送出成績的。請用當時玩遊戲的手機和瀏覽器打開這一頁。"])));
+  else put("none",o=>o.appendChild(card("這次沒有進前 "+total+" 名",["謝謝你的參與！下次再挑戰看看。"])));
+}
+/* 舊流程（資料庫沒有頒獎狀態時）：直接查排行榜 */
+async function legacy(){
+  const q="&order=score.desc,created_at.asc&limit=1000";let rows;
+  /* 資料庫還沒加 claim 欄位時，退回只比對暱稱 */
+  try{rows=await api("triage_leaderboard?select=name,score,correct,claim"+q)}
+  catch(_){rows=await api("triage_leaderboard?select=name,score,correct"+q)}
+  const name=ls("triageName"),hash=await myHash().catch(()=>"");
+  let i=hash?rows.findIndex(r=>r.claim&&r.claim===hash):-1;const strong=i>=0;
+  if(i<0&&name)i=rows.findIndex(r=>!r.claim&&r.name===name);
+  if(i>=0&&i<WINNERS)put("win|"+i+"|"+rows[i].name+"|"+rows[i].score+"|"+strong,o=>cert(o,rows[i],i+1,strong));
+  else if(i>=0)put("rank|"+i,o=>o.appendChild(card("這次沒有進前 "+WINNERS+" 名",["「",el("b","",rows[i].name),"」目前排第 ",el("b","",String(i+1))," 名（",el("b","",Number(rows[i].score).toLocaleString("en-US"))," 分）。"])));
+  else if(name)put("other",o=>o.appendChild(card("找不到這支手機的成績",["排行榜上「",el("b","",name),"」的最高分不是用這支手機送出的，或成績還沒送出。請用當時玩遊戲的手機和瀏覽器打開這一頁。"])));
+  else put("nogame",o=>o.appendChild(card("這支手機還沒有成績",["要先玩一局並送出成績才會上榜。如果你已經玩過，請用當時玩遊戲的手機和瀏覽器打開這一頁。"])));
+}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)check()});
+$("again").onclick=()=>{lastKey="";check()};
 check();
 </script>
 </body>

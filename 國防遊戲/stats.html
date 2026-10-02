@@ -98,6 +98,12 @@ h1{margin:0;font-size:clamp(2rem,5vw,3.2rem);font-weight:900;line-height:1.15;le
 @keyframes pop{from{opacity:0;transform:translateY(24px) scale(.7)}}
 .got{margin-top:10px;width:100%;background:transparent;border:2px solid var(--tag);color:var(--ink);border-radius:10px;font-size:.95rem;font-weight:700;min-height:44px;padding:0 6px}
 .got[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+.sync{display:inline-block;vertical-align:middle;margin-left:10px;font-size:.8rem;font-weight:700;letter-spacing:0;border-radius:999px;padding:3px 10px;background:rgba(255,255,255,.12);color:var(--muted)}
+.sync:empty{display:none}.sync.ok{background:var(--green);color:#fff}.sync.err{background:var(--red);color:#fff}
+.pass{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;max-width:420px;width:100%;margin:0 auto}
+.pass h3{margin:0;font-size:1.5rem}.pass p{margin:0;color:var(--muted);line-height:1.7}
+.pass input{width:100%;font:inherit;font-size:1.2rem;text-align:center;min-height:54px;border-radius:12px;border:2px solid var(--tag-edge);background:var(--tag);color:var(--tag-ink);padding:0 14px}
+.cer.asking .pass{display:flex}.cer.asking .stage,.cer.asking .cer-bot{display:none}
 .cer-bot{text-align:center;padding-top:8px}
 .cer-bot .cta{font-size:1.25rem;min-height:60px;padding:0 34px}
 .cer-bot p{margin:14px auto 0;color:var(--muted);line-height:1.7;max-width:46em;font-size:clamp(.9rem,1.5vw,1.1rem)}
@@ -162,13 +168,19 @@ h1{margin:0;font-size:clamp(2rem,5vw,3.2rem);font-weight:900;line-height:1.15;le
 <!-- 頒獎典禮 -->
 <div class="cer" id="cer" role="dialog" aria-modal="true" aria-labelledby="cerTitle">
   <div class="cer-top">
-    <h2 id="cerTitle">🏆 頒獎典禮</h2>
+    <h2 id="cerTitle">🏆 頒獎典禮 <span class="sync" id="sync"></span></h2>
     <div><button class="mini" id="cerReset">重新開始</button><button class="mini" id="cerClose">回到統計</button></div>
   </div>
+  <form class="pass" id="passForm" autocomplete="off">
+    <h3 id="passTitle">輸入頒獎密碼</h3>
+    <p id="passMsg"></p>
+    <input id="passIn" type="password" minlength="4" maxlength="40" aria-labelledby="passTitle" required>
+    <button class="cta" type="submit">確定</button>
+  </form>
   <div class="stage" id="stage"></div>
   <div class="cer-bot">
     <button class="cta" id="cerNext">揭曉</button>
-    <p id="cerHint">得獎的同學請拿出<b>玩遊戲的那支手機</b>，打開遊戲首頁，點「完美救護員」名單下方的「<b>🎁 領獎</b>」，把得獎畫面拿給我看就能領禮物。</p>
+    <p id="cerHint">揭曉後，得獎的同學請拿出<b>玩遊戲的那支手機</b>，打開遊戲首頁，點「完美救護員」名單下方的「<b>🎁 領獎</b>」，得獎畫面會自動出現，拿給我看就能領禮物。</p>
   </div>
 </div>
 <div class="confetti" id="confetti" aria-hidden="true"></div>
@@ -287,18 +299,67 @@ function drawStage(){
   const left=winners.length-shown,next=$("cerNext");
   next.hidden=!left;if(left)next.textContent="揭曉第 "+left+" 名";
 }
+/* ---- 手機領獎頁同步 ----
+   每揭曉一位，就把「固定的得獎名單＋已揭曉幾位」寫進資料庫（triage_award_set），award.html 只讀得到已揭曉的名次。
+   寫入需要頒獎密碼：資料庫裡還沒有密碼時，第一次輸入的就成為正式密碼。密碼記在這台裝置的 localStorage「triageHostPass」。
+   資料庫沒有這個功能（尚未重跑 supabase-setup.sql）時 syncOn=false，頒獎台照常運作，領獎頁則不等揭曉直接顯示。 */
+let pass="",syncOn=true,queue=Promise.resolve();
+try{pass=localStorage.getItem("triageHostPass")||""}catch(_){}
+function rpc(fn,body){
+  return fetch(SUPABASE_URL+"/rest/v1/rpc/"+fn,{method:"POST",
+    headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify(body||{})})
+    .then(async r=>{
+      if(!r.ok){let m="";try{m=(await r.json()).message||""}catch(_){}const e=new Error(m||"HTTP "+r.status);e.status=r.status;throw e}
+      return r.json()});
+}
+function setSync(k){const e=$("sync");e.className="sync "+k;
+  e.textContent={ok:"📱 手機領獎已同步",err:"📱 同步失敗，重試中…",off:"📱 手機領獎未同步（資料庫尚未更新）"}[k]||""}
+function savePass(v){pass=v;try{v?localStorage.setItem("triageHostPass",v):localStorage.removeItem("triageHostPass")}catch(_){}}
+function askPass(first,msg){
+  $("passTitle").textContent=first?"設定頒獎密碼":"輸入頒獎密碼";
+  $("passMsg").textContent=msg||(first?"第一次使用：請設定一組密碼（至少 4 個字）。之後只有知道密碼的人能揭曉名次。":"輸入密碼後才能開始揭曉。");
+  $("passIn").value="";$("cer").classList.add("asking");$("passIn").focus();
+}
+/* 依序送出，避免連按時後送的先到；回傳 false＝密碼不對，已改顯示輸入密碼 */
+function push(){
+  if(!syncOn||!winners)return Promise.resolve(true);
+  return queue=queue.then(async()=>{
+    try{
+      await rpc("triage_award_set",{p_pass:pass,p_revealed:shown,
+        p_winners:winners.map((w,i)=>({rank:i+1,name:w.name,score:w.score,correct:w.correct,claim:w.claim||null}))});
+      setSync("ok");return true;
+    }catch(e){
+      if(/bad_pass|short_pass/.test(e.message)){savePass("");askPass(false,"密碼不對，請再輸入一次。");return false}
+      if(e.status===404){syncOn=false;setSync("off");return true}
+      setSync("err");setTimeout(push,2500);return true;
+    }
+  });
+}
 async function cerLoad(){
-  winners=null;shown=0;drawStage();
+  winners=null;shown=0;$("cer").classList.remove("asking");drawStage();
   try{
-    winners=await(await api("triage_leaderboard?select=name,score,correct&order=score.desc,created_at.asc&limit="+WINNERS)).json();
-    drawStage();
+    if(syncOn&&!pass){
+      let st=null;
+      try{st=await rpc("triage_award_state")}catch(e){if(e.status===404){syncOn=false;setSync("off")}else throw e}
+      if(syncOn){askPass(!(st&&st.ready));return}
+    }
+    const q="&order=score.desc,created_at.asc&limit="+WINNERS;let rows;
+    try{rows=await(await api("triage_leaderboard?select=name,score,correct,claim"+q)).json()}
+    catch(_){rows=await(await api("triage_leaderboard?select=name,score,correct"+q)).json()}
+    winners=rows;
+    if(await push())drawStage();
   }catch(_){
     $("stage").textContent="";$("stage").appendChild(el("div","empty","讀取不到排行榜，請檢查網路後按「重新開始」。"));
   }
 }
+$("passForm").addEventListener("submit",e=>{
+  e.preventDefault();const v=$("passIn").value.trim();
+  if(v.length<4){$("passMsg").textContent="密碼至少要 4 個字。";return}
+  savePass(v);cerLoad();
+});
 function reveal(){
-  if(!winners||shown>=winners.length)return;
-  shown++;drawStage();
+  if(!winners||shown>=winners.length||$("cer").classList.contains("asking"))return;
+  shown++;drawStage();push();
   if(shown===winners.length)confetti();
 }
 function confetti(){
@@ -314,7 +375,7 @@ function confetti(){
   setTimeout(()=>{box.textContent=""},5600);
 }
 const cerOn=()=>$("cer").classList.contains("show");
-$("cerOpen").onclick=()=>{$("cer").classList.add("show");if(!winners)cerLoad();$("cerNext").focus()};
+$("cerOpen").onclick=()=>{$("cer").classList.add("show");if(!winners)cerLoad();else $("cerNext").focus()};
 $("cerClose").onclick=()=>$("cer").classList.remove("show");
 $("cerReset").onclick=cerLoad;
 $("cerNext").onclick=reveal;
