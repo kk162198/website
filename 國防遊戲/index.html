@@ -852,13 +852,12 @@ const sfx={
   tick(){tone(1100,0,.06,"square",.035)},                                   /* 最後 5 秒倒數 */
   ok(n){                                                                    /* 答對：連對越多音越高 */
     const b=523.25*semi(2*Math.min(Math.max(n-1,0),COMBO_MAX));
-    tone(b,0,.14,"triangle",.16);tone(b*semi(4),.08,.14,"triangle",.16);tone(b*semi(7),.16,.22,"triangle",.17);
-    if(n>=2)tone(b*2,.27,.3,"sine",.13);
+    tone(b,0,.12,"triangle",.15);tone(b*semi(7),.1,.24,"triangle",.15);   /* 只有兩個音，避免太吵 */
   },
   guess(){tone(523.25,0,.16,"triangle",.12)},                               /* 猜中：只有一聲 */
   bad(){tone(210,0,.3,"square",.07,120);tone(105,0,.3,"sine",.16,70)},      /* 答錯、逾時 */
   nope(){tone(180,0,.09,"sine",.14,130)},                                   /* 教學中做錯動作 */
-  win(){[0,4,7,12].forEach((k,i)=>tone(523.25*semi(k),i*.11,i===3?.5:.16,"triangle",.16))},
+  win(){tone(523.25,0,.18,"triangle",.14);tone(783.99,.16,.4,"triangle",.14)},
   end(){tone(392,0,.18,"triangle",.14);tone(523.25,.16,.32,"triangle",.14)}
 };
 function setMute(m,quiet){
