@@ -332,11 +332,14 @@ body.tut .snd-g{opacity:.35}
 .lb-form input{flex:1;min-width:0;font:inherit;font-size:1rem;padding:0 12px;min-height:48px;border-radius:10px;border:2px solid var(--tag-edge);background:var(--tag);color:var(--tag-ink)}
 .lb-form .primary{width:auto;margin:0;min-height:48px;padding:0 18px;font-size:1rem;flex:none}
 .lb-form .primary[disabled]{opacity:.6}
-#lbTitle{color:var(--tag-ink)}
 .lb-links{display:flex;align-items:center;gap:16px}
 .lb-links a{color:var(--muted-on-field);font-size:.9rem;font-weight:700;text-decoration:none;min-height:40px;display:flex;align-items:center;white-space:nowrap}
-.lb-links .lb-more{flex:1;width:auto}
-.lb-more{display:block;width:100%;border:none;background:transparent;color:var(--muted-on-field);font-size:.9rem;font-weight:700;padding:6px 0;min-height:40px;text-align:right}
+/* 完美救護員名單：兩欄，只列名次與暱稱（不顯示分數，分數排名留到頒獎） */
+.lb.pf{display:grid;grid-template-columns:1fr 1fr;column-gap:14px}
+.lb.pf .r{grid-template-columns:1.8em 1fr;min-width:0}
+.lb.pf .empty,.lb.pf .left{grid-column:1/-1}
+.lb.pf .left{opacity:.75;font-size:.85rem;padding:8px 4px 0}
+.lb-sub{margin:-4px 0 8px;font-size:.85rem;line-height:1.6;color:var(--muted-on-field)}
 [hidden]{display:none!important}
 
 /* 新手教學：一次只亮一個要按的地方，用手指圖示帶著做 */
@@ -460,9 +463,10 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
   <p class="lead">發生大量傷患事件，你是第一位到場的救護員。每局從 50 位傷患中抽出 10 位：親手檢查他的狀況，聽他怎麼回應，再把他滑向正確顏色的檢傷卡。</p>
 
   <div class="panel" id="lbHome" hidden>
-    <h2>🏆 排行榜</h2>
-    <div class="lb" id="lbHomeList"></div>
-    <div class="lb-links"><a href="award.html">🎁 領獎</a><a href="stats.html">📊 統計</a><button class="lb-more" id="lbOpen">看前 20 名 ›</button></div>
+    <h2>🎖️ 完美救護員</h2>
+    <p class="lb-sub">最先 10 位傷患全部答對的 20 位。分數排名留到頒獎時揭曉！</p>
+    <div class="lb pf" id="lbHomeList"></div>
+    <div class="lb-links"><a href="award.html">🎁 領獎</a><a href="stats.html">📊 統計</a></div>
   </div>
 
   <div class="panel">
@@ -534,7 +538,7 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
   <p class="sub" id="acc"></p>
   <div class="grade" id="grade"></div>
   <div class="panel" id="lbSubmit" hidden>
-    <h2>🏆 登上排行榜</h2>
+    <h2>🏆 送出成績</h2>
     <form class="lb-form" id="lbForm">
       <input id="lbName" maxlength="12" placeholder="輸入暱稱（最多 12 字）" aria-label="暱稱" autocomplete="nickname" enterkeyhint="send" required>
       <button class="primary" id="lbSend" type="submit">送出</button>
@@ -542,8 +546,9 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
     <p class="note" id="lbMsg" role="status"></p>
   </div>
   <div class="panel" id="lbWrap" hidden>
-    <h2>排行榜 前 20 名</h2>
-    <div class="lb" id="lbResult"></div>
+    <h2>🎖️ 完美救護員</h2>
+    <p class="lb-sub">最先 10 位傷患全部答對的 20 位。</p>
+    <div class="lb pf" id="lbResult"></div>
   </div>
   <div class="review" id="review"></div>
   <div class="dock"><div class="row">
@@ -593,13 +598,6 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
   </div>
 </div>
 
-<div class="fb" id="lb" role="dialog" aria-modal="true" aria-labelledby="lbTitle">
-  <div class="sheet">
-    <p class="verdict" id="lbTitle">🏆 排行榜 前 20 名</p>
-    <div class="lb" id="lbList"></div>
-    <button class="primary" id="lbClose">關閉</button>
-  </div>
-</div>
 
 <div class="fb" id="tutDone" role="dialog" aria-modal="true" aria-labelledby="tutDoneT">
   <div class="sheet">
@@ -962,7 +960,7 @@ async function keepAwake(on){
 }
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));window.scrollTo(0,0);
   document.body.classList.toggle("playing",id==="game");if(id!=="game")book(false);keepAwake(id==="game");
-  if(id==="start"&&LB_ON)lbLoad($("lbHomeList"),LB_HOME)}
+  if(id==="start"&&LB_ON)lbLoad($("lbHomeList"))}
 function book(open){
   $("book").classList.toggle("open",open);$("bookShade").classList.toggle("open",open);
   $("bookTab").setAttribute("aria-expanded",open);
@@ -1136,7 +1134,7 @@ function finish(){
    兩個欄位留空的話，遊戲照常可玩，只是不顯示排行榜。 */
 const SUPABASE_URL="https://hhsfehaozltfewmfjdho.supabase.co";
 const SUPABASE_KEY="sb_publishable_Vaw-s5RPSU2rc5179kkJuw_p3T8nQ8W";
-const LB_ON=!!(SUPABASE_URL&&SUPABASE_KEY),LB_TOP=20,LB_HOME=5;
+const LB_ON=!!(SUPABASE_URL&&SUPABASE_KEY),LB_TOP=20,LB_FULL=10;
 let sent=false,myName="";
 /* 領獎憑證：這支手機第一次送成績時產生一把隨機 key 存在 localStorage「triageClaim」，
    送出的是它的 SHA-256（claim 欄位）。領獎頁 award.html 用同一把 key 比對，別人取同樣暱稱也冒領不了。 */
@@ -1155,33 +1153,35 @@ function lbFetch(path,opt){
     .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r});
 }
 function lbNote(el,txt){el.textContent="";const d=document.createElement("div");d.className="empty";d.textContent=txt;el.appendChild(d)}
-async function lbLoad(el,n){
+/* 完美救護員：最先「10 位全部答對」的 LB_TOP 位（同一個暱稱只算最早的那一次），依達成時間排序。
+   刻意不顯示分數排名——前 5 名留到報告時在 stats.html 頒獎揭曉。 */
+async function lbLoad(el){
   lbNote(el,"讀取中…");
   try{
-    const rows=await(await lbFetch("triage_leaderboard?select=name,score,correct&order=score.desc,created_at.asc&limit="+(n||LB_TOP))).json();
-    if(!rows.length){lbNote(el,"還沒有人上榜，快來當第一名！");return}
+    const all=await(await lbFetch("triage_scores?select=name,created_at&correct=eq."+LB_FULL+"&order=created_at.asc&limit=500")).json();
+    const seen=new Set(),rows=[];
+    for(const r of all){if(seen.has(r.name))continue;seen.add(r.name);rows.push(r);if(rows.length>=LB_TOP)break}
+    if(!rows.length){lbNote(el,"還沒有人全部答對，快來當第一位完美救護員！");return}
     el.textContent="";
     rows.forEach((r,i)=>{
       const row=document.createElement("div");row.className="r"+(myName&&r.name===myName?" me":"");
-      [["b",i+1],["span",r.name,"n"],["span","答對 "+r.correct,"c"],["span",r.score,"s"]].forEach(([tag,txt,cls])=>{
+      [["b",i+1],["span",r.name,"n"]].forEach(([tag,txt,cls])=>{
         const e=document.createElement(tag);if(cls)e.className=cls;e.textContent=txt;row.appendChild(e)});
       el.appendChild(row);
     });
-  }catch(_){lbNote(el,"排行榜暫時讀取不到，請稍後再試。")}
+    if(rows.length<LB_TOP){const d=document.createElement("div");d.className="left";d.textContent="還有 "+(LB_TOP-rows.length)+" 個名額";el.appendChild(d)}
+  }catch(_){lbNote(el,"名單暫時讀取不到，請稍後再試。")}
 }
 function lbAfterGame(){
   if(!LB_ON)return;
   sent=false;$("lbSubmit").hidden=false;$("lbWrap").hidden=false;
-  $("lbSend").disabled=false;$("lbMsg").textContent="同一個暱稱只會保留最高分。";
+  $("lbSend").disabled=false;$("lbMsg").textContent=right===LB_FULL?"全部答對！送出後就會列入完美救護員名單。":"分數排名在頒獎時揭曉；同一個暱稱只保留最高分。";
   if(!$("lbName").value){try{$("lbName").value=localStorage.getItem("triageName")||""}catch(_){}}
   lbLoad($("lbResult"));
 }
 if(LB_ON){
-  /* 首頁直接顯示前 5 名，回到首頁時重新讀取 */
-  $("lbHome").hidden=false;lbLoad($("lbHomeList"),LB_HOME);
-  $("lbOpen").onclick=()=>{$("lb").classList.add("show");lbLoad($("lbList"))};
-  $("lbClose").onclick=()=>$("lb").classList.remove("show");
-  $("lb").addEventListener("click",e=>{if(e.target===$("lb"))$("lb").classList.remove("show")});
+  /* 首頁直接顯示完美救護員名單，回到首頁時重新讀取 */
+  $("lbHome").hidden=false;lbLoad($("lbHomeList"));
   $("lbForm").addEventListener("submit",async e=>{
     e.preventDefault();if(sent)return;
     const name=Array.from($("lbName").value.trim().replace(/\s+/g," ")).slice(0,12).join("");
