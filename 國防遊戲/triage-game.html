@@ -56,6 +56,14 @@ h1 .strip i{display:block;height:10px;flex:1;border-radius:2px}
 .panel h2{font-size:1.05rem;margin:0 0 10px}
 .panel ol,.panel ul{margin:0;padding-left:1.4em;line-height:1.75}
 .panel li{margin-bottom:7px}
+/* START 流程圖 */
+.flowchart{display:block;width:100%;height:auto;max-width:440px;margin:4px auto 10px}
+.fc-box{fill:var(--field);stroke:var(--tag);stroke-width:2}
+.fc-q{font:700 15px var(--sans);fill:var(--ink-on-field);text-anchor:middle;dominant-baseline:central}
+.fc-c{font:900 14px var(--sans);fill:#fff;text-anchor:middle;dominant-baseline:central}
+.fc-l{font:500 11.5px var(--sans);fill:var(--muted-on-field)}
+.fc-a{fill:none;stroke:var(--muted-on-field);stroke-width:1.8}
+.fc-h{fill:var(--muted-on-field)}
 .legend{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
 .legend div{display:flex;align-items:center;gap:10px;background:var(--field-2);padding:10px 12px;border-radius:8px;font-size:.95rem}
 .legend b{font-family:var(--num);font-size:1.5rem;width:1.3em;text-align:center}
@@ -321,15 +329,8 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
   </div>
 
   <div class="panel">
-    <h2>START 檢傷原則（照順序判斷）</h2>
-    <ol>
-      <li><b>能自己走路？</b>能 → <span class="dot" style="background:var(--green)"></span>綠色</li>
-      <li><b>有呼吸？</b>沒有 → 打開呼吸道；仍沒有 → <span class="dot" style="background:var(--black)"></span>黑色，恢復呼吸 → <span class="dot" style="background:var(--red)"></span>紅色</li>
-      <li><b>呼吸每分鐘超過 30 次？</b>是 → <span class="dot" style="background:var(--red)"></span>紅色</li>
-      <li><b>循環：</b>回填超過 2 秒或摸不到手腕脈搏 → <span class="dot" style="background:var(--red)"></span>紅色</li>
-      <li><b>意識：</b>無法聽從簡單指令 → <span class="dot" style="background:var(--red)"></span>紅色</li>
-      <li>以上都沒有 → <span class="dot" style="background:var(--yellow)"></span>黃色</li>
-    </ol>
+    <h2>START 檢傷流程</h2>
+    <svg class="flowchart" viewBox="0 0 360 372" role="img" aria-label="START 檢傷流程圖：能行走為綠色；不能行走則看呼吸，沒有呼吸就打開呼吸道，仍無呼吸為黑色、恢復呼吸為紅色；呼吸每分鐘超過 30 次為紅色；回填超過 2 秒或摸不到脈搏為紅色；無法聽從指令為紅色；以上都正常為黃色。"><defs><marker id="fcA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="fc-h"/></marker></defs><rect class="fc-box" x="130" y="8" width="110" height="36" rx="6"/><text class="fc-q" x="185" y="26">能否行走</text><path class="fc-a" d="M130 26H56" marker-end="url(#fcA)"/><text class="fc-l" x="93" y="20" text-anchor="middle">可</text><rect x="24" y="11" width="30" height="30" rx="5" fill="var(--green)" stroke="rgba(255,255,255,.45)"/><text class="fc-c" x="39" y="26">綠</text><path class="fc-a" d="M185 44V84" marker-end="url(#fcA)"/><text class="fc-l" x="193" y="68" text-anchor="start">否</text><rect class="fc-box" x="130" y="86" width="110" height="36" rx="6"/><text class="fc-q" x="185" y="104">呼吸次數</text><path class="fc-a" d="M240 104H316" marker-end="url(#fcA)"/><text class="fc-l" x="274" y="97" text-anchor="middle">&gt; 30 次/分</text><rect x="318" y="89" width="30" height="30" rx="5" fill="var(--red)" stroke="rgba(255,255,255,.45)"/><text class="fc-c" x="333" y="104">紅</text><path class="fc-a" d="M130 104H100" marker-end="url(#fcA)"/><text class="fc-l" x="116" y="93" text-anchor="middle">無</text><rect class="fc-box" x="4" y="86" width="94" height="36" rx="6"/><text class="fc-q" x="51" y="104">打開呼吸道</text><path class="fc-a" d="M30 122V150" marker-end="url(#fcA)"/><path class="fc-a" d="M80 122V150" marker-end="url(#fcA)"/><rect x="15" y="152" width="30" height="30" rx="5" fill="var(--black)" stroke="rgba(255,255,255,.45)"/><text class="fc-c" x="30" y="167">黑</text><rect x="65" y="152" width="30" height="30" rx="5" fill="var(--red)" stroke="rgba(255,255,255,.45)"/><text class="fc-c" x="80" y="167">紅</text><text class="fc-l" x="30" y="197" text-anchor="middle">仍無呼吸</text><text class="fc-l" x="80" y="197" text-anchor="middle">恢復呼吸</text><path class="fc-a" d="M185 122V174" marker-end="url(#fcA)"/><text class="fc-l" x="193" y="152" text-anchor="start">≤ 30 次/分</text><rect class="fc-box" x="130" y="176" width="110" height="36" rx="6"/><text class="fc-q" x="185" y="194">循環狀況</text><path class="fc-a" d="M240 194H316" marker-end="url(#fcA)"/><text class="fc-l" x="274" y="187" text-anchor="middle">回填 &gt; 2 秒</text><text class="fc-l" x="274" y="209" text-anchor="middle">或摸不到脈搏</text><rect x="318" y="179" width="30" height="30" rx="5" fill="var(--red)" stroke="rgba(255,255,255,.45)"/><text class="fc-c" x="333" y="194">紅</text><path class="fc-a" d="M185 212V264" marker-end="url(#fcA)"/><text class="fc-l" x="193" y="235" text-anchor="start">回填 ≤ 2 秒</text><text class="fc-l" x="193" y="250" text-anchor="start">且摸得到脈搏</text><rect class="fc-box" x="130" y="266" width="110" height="36" rx="6"/><text class="fc-q" x="185" y="284">聽從指令</text><path class="fc-a" d="M240 284H316" marker-end="url(#fcA)"/><text class="fc-l" x="278" y="278" text-anchor="middle">不能</text><rect x="318" y="269" width="30" height="30" rx="5" fill="var(--red)" stroke="rgba(255,255,255,.45)"/><text class="fc-c" x="333" y="284">紅</text><path class="fc-a" d="M185 302V334" marker-end="url(#fcA)"/><text class="fc-l" x="193" y="322" text-anchor="start">能</text><rect x="170" y="336" width="30" height="30" rx="5" fill="var(--yellow)" stroke="rgba(255,255,255,.45)"/><text class="fc-c" x="185" y="351" fill="#2a2418">黃</text></svg>
   </div>
 
   <div class="legend">
