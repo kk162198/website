@@ -63,8 +63,6 @@ button:focus-visible,[tabindex]:focus-visible{outline:3px solid #fff;outline-off
 
 /* start */
 h1{font-size:clamp(2rem,8vw,2.8rem);font-weight:900;line-height:1.15;margin:16px 0 8px;letter-spacing:.02em}
-h1 .strip{display:flex;gap:4px;margin-bottom:14px}
-h1 .strip i{display:block;height:10px;flex:1;border-radius:2px}
 .lead{color:var(--muted-on-field);line-height:1.75;margin:0 0 18px}
 .panel{background:var(--field-2);border-radius:10px;padding:16px 16px 8px;margin-bottom:16px}
 .panel h2{font-size:1.05rem;margin:0 0 10px}
@@ -224,6 +222,40 @@ body.playing .book{display:flex}
 .book .swatches div{display:flex;align-items:center;gap:6px;padding:7px 8px;background:rgba(255,255,255,.45);border-radius:6px}
 .book .swatches i{width:14px;height:14px;border-radius:3px;flex:none}
 
+/* 首頁主視覺：傷患卡被依序滑向四種檢傷卡的動畫 */
+.hero{margin:0 0 14px}
+.hero-art{display:block;width:100%;height:auto;border-radius:16px;background:var(--ground);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 8px 22px rgba(0,0,0,.28)}
+.h-card,.h-tag,.h-chest{transform-box:fill-box;transform-origin:center}
+.hero-art text{font-family:var(--sans);font-weight:900;text-anchor:middle;dominant-baseline:central}
+.h-beacon{animation:hBeacon 1.6s ease-in-out infinite}
+.h-beacon.b2{animation-delay:-.8s}
+@keyframes hBeacon{0%,100%{opacity:.08}50%{opacity:.5}}
+.h-card{animation:hSwipe 10s cubic-bezier(.45,0,.3,1) infinite}
+@keyframes hSwipe{
+  0%,6%{transform:none}
+  11%,19%{transform:translate(32px,-2px) rotate(5deg)}
+  25%,31%{transform:none}
+  36%,44%{transform:translate(0,-20px) rotate(-1.5deg)}
+  50%,56%{transform:none}
+  61%,69%{transform:translate(-32px,-2px) rotate(-5deg)}
+  75%,81%{transform:none}
+  86%,94%{transform:translate(0,20px) rotate(1.5deg)}
+  100%{transform:none}}
+.h-tint{opacity:0;animation:hTint 10s linear infinite}
+.h-tag{animation:hTag 10s ease-in-out infinite}
+.h-arrow{opacity:.35;animation:hArrow 10s linear infinite}
+.h-red{animation-delay:0s}.h-yellow{animation-delay:2.5s}.h-green{animation-delay:5s}.h-black{animation-delay:7.5s}
+@keyframes hTint{0%,8%{opacity:0}12%,19%{opacity:.78}24%,100%{opacity:0}}
+@keyframes hTag{0%,8%{transform:none;filter:none}13%,19%{transform:scale(1.14);filter:drop-shadow(0 0 8px rgba(255,255,255,.55))}25%,100%{transform:none;filter:none}}
+@keyframes hArrow{0%,7%{opacity:.35}11%,19%{opacity:1}24%,100%{opacity:.35}}
+.h-chest{animation:hBreathe 2.4s ease-in-out infinite}
+@keyframes hBreathe{50%{transform:scale(1.06,1.1)}}
+.eyebrow{display:inline-block;margin:14px 0 0;padding:3px 10px;border-radius:999px;background:var(--tag);color:var(--tag-ink);font-size:.78rem;font-weight:900;letter-spacing:.04em}
+.hero h1{margin:8px 0 4px}
+.hero h1 b{color:var(--yellow);font-weight:900}
+.tagline{margin:0;font-size:1.05rem;font-weight:700;color:var(--ink-on-field)}
+@media (prefers-reduced-motion:reduce){.h-card,.h-tint,.h-tag,.h-arrow,.h-beacon,.h-chest{animation:none}}
+
 /* 音效開關 */
 .home-row{display:flex;gap:10px;margin-bottom:16px;flex:none}
 .home-row .tut-open{margin:0;width:auto;flex:1;min-width:0}
@@ -362,11 +394,66 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
 <body>
 
 <section class="screen active" id="start">
-  <h1>
-    <span class="strip"><i style="background:var(--red)"></i><i style="background:var(--yellow)"></i><i style="background:var(--green)"></i><i style="background:var(--black)"></i></span>
-    檢傷分類<br>滑動救援
-  </h1>
-  <p class="lead">發生大量傷患事件，你是第一位到場的救護員。每局會從 50 位傷患中抽出 10 位，每位傷患你有 20 秒：親手檢查他的狀況，聽他怎麼回應，再決定該給哪一種顏色的檢傷卡。</p>
+  <header class="hero">
+    <svg class="hero-art" viewBox="0 0 360 236" role="img" aria-label="示意圖：把傷患卡滑向紅、黃、綠、黑四種檢傷卡">
+      <defs>
+        <radialGradient id="hGlowR"><stop offset="0" stop-color="#ff4a3d"/><stop offset="1" stop-color="#ff4a3d" stop-opacity="0"/></radialGradient>
+        <radialGradient id="hGlowB"><stop offset="0" stop-color="#4d8dff"/><stop offset="1" stop-color="#4d8dff" stop-opacity="0"/></radialGradient>
+        <clipPath id="hClip"><rect x="92" y="66" width="176" height="104" rx="12"/></clipPath>
+      </defs>
+      <!-- 救護車警示燈的光暈 -->
+      <circle class="h-beacon" cx="0" cy="0" r="120" fill="url(#hGlowR)"/>
+      <circle class="h-beacon b2" cx="360" cy="0" r="120" fill="url(#hGlowB)"/>
+      <!-- 地面碎石 -->
+      <g fill="rgba(0,0,0,.16)"><circle cx="40" cy="196" r="3"/><circle cx="58" cy="52" r="2"/><circle cx="318" cy="186" r="3"/><circle cx="300" cy="48" r="2"/><circle cx="96" cy="212" r="2"/><circle cx="262" cy="24" r="2.5"/><circle cx="26" cy="120" r="2"/><circle cx="338" cy="92" r="2"/></g>
+      <!-- 方向箭頭 -->
+      <g fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path class="h-arrow h-red" d="M274 110l8 8-8 8M282 110l8 8-8 8"/>
+        <path class="h-arrow h-yellow" d="M172 60l8-8 8 8"/>
+        <path class="h-arrow h-green" d="M86 110l-8 8 8 8M78 110l-8 8 8 8"/>
+        <path class="h-arrow h-black" d="M172 176l8 8 8-8"/>
+      </g>
+      <!-- 四種檢傷卡 -->
+      <g class="h-tag h-green"><rect x="8" y="80" width="56" height="76" rx="9" fill="#3f8f46"/><circle cx="36" cy="91" r="3.5" fill="rgba(0,0,0,.35)"/><text x="36" y="119" font-size="27" fill="#fff">綠</text><text x="36" y="143" font-size="10.5" fill="#fff" opacity=".92">輕傷</text></g>
+      <g class="h-tag h-red"><rect x="296" y="80" width="56" height="76" rx="9" fill="#c8302a"/><circle cx="324" cy="91" r="3.5" fill="rgba(0,0,0,.35)"/><text x="324" y="119" font-size="27" fill="#fff">紅</text><text x="324" y="143" font-size="10.5" fill="#fff" opacity=".92">立即</text></g>
+      <g class="h-tag h-yellow"><rect x="134" y="8" width="92" height="40" rx="9" fill="#e2b21c"/><circle cx="145" cy="28" r="3.5" fill="rgba(0,0,0,.3)"/><text x="170" y="28" font-size="23" fill="#2a2418">黃</text><text x="201" y="29" font-size="10.5" fill="#2a2418">延遲</text></g>
+      <g class="h-tag h-black"><rect x="134" y="188" width="92" height="40" rx="9" fill="#1c1c1c" stroke="rgba(255,255,255,.3)"/><circle cx="145" cy="208" r="3.5" fill="rgba(255,255,255,.3)"/><text x="168" y="208" font-size="23" fill="#fff">黑</text><text x="202" y="209" font-size="10.5" fill="#fff" opacity=".92">無徵象</text></g>
+      <!-- 傷患卡 -->
+      <g class="h-card">
+        <rect x="92" y="70" width="176" height="104" rx="12" fill="rgba(0,0,0,.28)"/>
+        <rect x="92" y="66" width="176" height="104" rx="12" fill="#817b6b"/>
+        <g clip-path="url(#hClip)">
+          <g transform="translate(101,76) scale(.38)">
+            <ellipse cx="215" cy="190" rx="190" ry="14" fill="rgba(0,0,0,.18)"/>
+            <ellipse cx="318" cy="150" rx="34" ry="14" fill="#7d130f" opacity=".85"/>
+            <rect x="240" y="80" width="150" height="28" rx="12" fill="#3b4a63"/><rect x="240" y="114" width="150" height="28" rx="12" fill="#3b4a63"/>
+            <rect x="380" y="76" width="22" height="34" rx="8" fill="#2a2320"/><rect x="380" y="112" width="22" height="34" rx="8" fill="#2a2320"/>
+            <rect x="112" y="37" width="110" height="22" rx="10" fill="#e8b98f"/><rect x="112" y="37" width="46" height="22" rx="10" fill="#d9e2ea"/>
+            <rect x="112" y="163" width="110" height="22" rx="10" fill="#e8b98f"/><rect x="112" y="163" width="46" height="22" rx="10" fill="#d9e2ea"/>
+            <circle cx="228" cy="48" r="11" fill="#e8b98f"/><circle cx="228" cy="174" r="11" fill="#e8b98f"/>
+            <rect x="88" y="100" width="22" height="22" fill="#e8b98f"/>
+            <g class="h-chest"><rect x="100" y="58" width="150" height="106" rx="26" fill="#d9e2ea"/><path d="M110 111h130" stroke="rgba(0,0,0,.12)" stroke-width="2"/></g>
+            <circle cx="45" cy="111" r="36" fill="#2b2118"/><circle cx="56" cy="111" r="32" fill="#e8b98f"/>
+            <path d="M60 96q5 4 10 0M60 122q5 4 10 0" stroke="#3a2a1e" stroke-width="2" fill="none"/>
+            <path d="M84 104q3 7 0 14" stroke="#7a4a3a" stroke-width="2.5" fill="none"/>
+            <path d="M306 122q8-8 18 0q6 8-4 12q-12 4-14-12z" fill="#b01e18"/>
+            <path d="M190 78q6-10 14-3q10-2 6 9q4 10-8 8q-10 6-12-4q-8-4 0-10z" fill="#9e1b16" opacity=".9"/>
+          </g>
+          <g class="h-tint h-red"><rect x="92" y="66" width="176" height="104" fill="#c8302a"/><text x="180" y="118" font-size="46" fill="#fff">紅</text></g>
+          <g class="h-tint h-yellow"><rect x="92" y="66" width="176" height="104" fill="#e2b21c"/><text x="180" y="118" font-size="46" fill="#2a2418">黃</text></g>
+          <g class="h-tint h-green"><rect x="92" y="66" width="176" height="104" fill="#3f8f46"/><text x="180" y="118" font-size="46" fill="#fff">綠</text></g>
+          <g class="h-tint h-black"><rect x="92" y="66" width="176" height="104" fill="#1c1c1c"/><text x="180" y="118" font-size="46" fill="#fff">黑</text></g>
+        </g>
+        <rect x="92" y="66" width="176" height="104" rx="12" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.5"/>
+        <!-- 拖曳的手指 -->
+        <g transform="translate(222,140) scale(2)"><path d="M9 1.5a2 2 0 0 1 2 2V10l5.8 1.2a2.8 2.8 0 0 1 2.2 2.7V17a5.5 5.5 0 0 1-5.5 5.5h-1.6a5.5 5.5 0 0 1-4.5-2.3L4.2 15.6a1.7 1.7 0 0 1 2.6-2.1l.2.2V3.5a2 2 0 0 1 2-2z" fill="#fff" stroke="#2a2418" stroke-width="1.2" stroke-linejoin="round"/></g>
+      </g>
+    </svg>
+    <p class="eyebrow">START 檢傷法 · 大量傷患模擬</p>
+    <h1>檢傷分類<br><b>滑動救援</b></h1>
+    <p class="tagline">20 秒，替每一位傷患決定顏色。</p>
+  </header>
+  <p class="lead">發生大量傷患事件，你是第一位到場的救護員。每局從 50 位傷患中抽出 10 位：親手檢查他的狀況，聽他怎麼回應，再把他滑向正確顏色的檢傷卡。</p>
 
   <div class="home-row">
     <button class="ghost tut-open" id="tutOpen">▶ 新手教學（跟著手指做一次）</button>
