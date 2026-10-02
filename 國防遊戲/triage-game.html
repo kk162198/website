@@ -230,6 +230,22 @@ body.playing .book{display:flex}
 .ghost{background:var(--field);border:2px solid var(--tag);color:var(--ink-on-field);border-radius:12px;padding:14px;min-height:56px;font-weight:700;font-size:1rem;flex:1}
 .row .primary{flex:1;margin:0}
 
+/* 排行榜 */
+.lb{font-size:.95rem;margin-bottom:8px}
+.lb .r{display:grid;grid-template-columns:2.2em 1fr auto auto;gap:8px;align-items:baseline;padding:7px 4px;border-bottom:1px dashed rgba(128,128,128,.4)}
+.lb .r b{font-family:var(--num);font-size:1.15rem}
+.lb .r .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.lb .r .c{font-size:.8rem;opacity:.7}
+.lb .r .s{font-family:var(--num);font-weight:800;font-size:1.2rem;text-align:right;min-width:3em}
+.lb .r.me{background:rgba(226,178,28,.3);border-radius:6px}
+.lb .empty{opacity:.75;padding:10px 4px;line-height:1.6}
+.lb-form{display:flex;gap:8px;margin-bottom:8px}
+.lb-form input{flex:1;min-width:0;font:inherit;font-size:1rem;padding:0 12px;min-height:48px;border-radius:10px;border:2px solid var(--tag-edge);background:var(--tag);color:var(--tag-ink)}
+.lb-form .primary{width:auto;margin:0;min-height:48px;padding:0 18px;font-size:1rem;flex:none}
+.lb-form .primary[disabled]{opacity:.6}
+#lbTitle{color:var(--tag-ink)}
+[hidden]{display:none!important}
+
 /* 橫向提示：這款遊戲為直向設計 */
 .rotate{position:fixed;inset:0;z-index:50;background:var(--field);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:20px;font-weight:700;font-size:1.1rem}
 .rotate i{font-style:normal;font-size:3rem;display:block;animation:rot 1.6s ease-in-out infinite}
@@ -244,7 +260,7 @@ body.playing .book{display:flex}
     <span class="strip"><i style="background:var(--red)"></i><i style="background:var(--yellow)"></i><i style="background:var(--green)"></i><i style="background:var(--black)"></i></span>
     檢傷分類<br>滑動救援
   </h1>
-  <p class="lead">發生大量傷患事件，你是第一位到場的救護員。每位傷患你有 20 秒：親手檢查他的狀況，聽他怎麼回應，再決定該給哪一種顏色的檢傷卡。</p>
+  <p class="lead">發生大量傷患事件，你是第一位到場的救護員。每局會從 50 位傷患中抽出 10 位，每位傷患你有 20 秒：親手檢查他的狀況，聽他怎麼回應，再決定該給哪一種顏色的檢傷卡。</p>
 
   <div class="panel">
     <h2>怎麼檢查</h2>
@@ -277,12 +293,15 @@ body.playing .book{display:flex}
   </div>
 
   <p class="note">小技巧：檢查照 START 的順序做，一找到決定性的結果就可以分類，不需要全部檢查。內容依照 START 檢傷分類法編寫，報告前請對照課本確認。</p>
-  <div class="dock"><button class="primary" id="go">開始檢傷</button></div>
+  <div class="dock"><div class="row">
+    <button class="ghost" id="lbOpen" hidden>🏆 排行榜</button>
+    <button class="primary" id="go">開始檢傷</button>
+  </div></div>
 </section>
 
 <section class="screen" id="game">
   <div class="hud">
-    <div><div class="k">傷患</div><div class="v" id="prog">1/15</div></div>
+    <div><div class="k">傷患</div><div class="v" id="prog">1/10</div></div>
     <div style="text-align:center"><div class="k">剩餘秒數</div><div class="v" id="sec">20</div></div>
     <div style="text-align:right"><div class="k">分數</div><div class="v" id="score">0</div></div>
   </div>
@@ -321,6 +340,18 @@ body.playing .book{display:flex}
   <div class="big" id="final">0</div>
   <p class="sub" id="acc"></p>
   <div class="grade" id="grade"></div>
+  <div class="panel" id="lbSubmit" hidden>
+    <h2>🏆 登上排行榜</h2>
+    <form class="lb-form" id="lbForm">
+      <input id="lbName" maxlength="12" placeholder="輸入暱稱（最多 12 字）" aria-label="暱稱" autocomplete="nickname" enterkeyhint="send" required>
+      <button class="primary" id="lbSend" type="submit">送出</button>
+    </form>
+    <p class="note" id="lbMsg" role="status"></p>
+  </div>
+  <div class="panel" id="lbWrap" hidden>
+    <h2>排行榜 前 20 名</h2>
+    <div class="lb" id="lbResult"></div>
+  </div>
   <div class="review" id="review"></div>
   <div class="dock"><div class="row">
     <button class="ghost" id="rules">看檢傷原則</button>
@@ -369,6 +400,14 @@ body.playing .book{display:flex}
     <p class="why" id="why"></p>
     <p class="proc" id="proc"></p>
     <button class="primary" id="next">下一位傷患</button>
+  </div>
+</div>
+
+<div class="fb" id="lb" role="dialog" aria-modal="true" aria-labelledby="lbTitle">
+  <div class="sheet">
+    <p class="verdict" id="lbTitle">🏆 排行榜 前 20 名</p>
+    <div class="lb" id="lbList"></div>
+    <button class="primary" id="lbClose">關閉</button>
   </div>
 </div>
 
@@ -431,6 +470,123 @@ const CASES=[
   {who:"路旁發現的傷者",walk:false,breath:0,airway:0,pale:true,
    look:{shirt:"#6e6e6e",pants:"#2a2a2a",marks:[["blood","head"]],eyes:"closed"},
    why:"打開呼吸道後仍然沒有呼吸，在大量傷患時分為黑色。資源有限時，要優先救有機會存活的人。"}
+  /* ===== 以下為擴充題庫（共 50 題，每局抽 10 題） ===== */
+  /* 綠色 */
+  ,{who:"手掌燙傷的廚師",walk:true,walkLine:"手被熱油燙到了…我自己走過去。",
+   look:{shirt:"#f4f4f0",pants:"#2b2b2b",marks:[["swell","handT"]]},
+   why:"燙傷面積小，而且能自己走，就是綠色。之後可以請他自己沖水降溫。"}
+  ,{who:"滿身灰塵一直咳嗽的民眾",walk:true,walkLine:"咳、咳…到處都是灰…我可以走。",
+   look:{shirt:"#7d8a96",pants:"#3a3a3a",marks:[["dust","torso"]]},
+   why:"能走就先分到綠色。但如果他之後越咳越喘，就要重新評估、升級分類。"}
+  ,{who:"手臂骨折的工人",walk:true,walkLine:"手好像斷了…我用另一隻手扶著走過去。",
+   look:{shirt:"#d98a2b",pants:"#3d4a5c",marks:[["deform","handT"]]},
+   why:"上肢骨折看起來很嚴重，但他能自己走，依 START 第一步就是綠色。"}
+  ,{who:"大聲呼救的男子",walk:true,walkLine:"快來救我！我流好多血！（邊喊邊快步走過來）",
+   look:{shirt:"#a8443c",pants:"#2f2f38",marks:[["blood","torso"]]},
+   why:"叫得最大聲的不一定最嚴重。能喊、能走，代表呼吸、循環、意識暫時都還夠，屬於綠色。"}
+  ,{who:"耳鳴聽不清楚的女子",walk:true,walkLine:"什麼？我聽不太到…（看到你招手後自己走過來）",
+   look:{shirt:"#8c6fae",pants:"#40404a",marks:[]},
+   why:"爆炸後常有暫時聽不清楚的情況，所以喊話時要搭配手勢。她能自己走過來，分為綠色。"}
+  ,{who:"膝蓋撞傷的慢跑者",walk:true,walkLine:"膝蓋撞到了…一跛一跛的，還能走。",
+   look:{shirt:"#39a0a8",pants:"#22262e",marks:[["bruise","legT"]]},
+   why:"跛著走也算「能自己走」，分為綠色。"}
+  /* 黃色 */
+  ,{who:"腳踝腫脹的護理師",walk:false,walkLine:"腳踝腫得好大，一踩就痛…站不起來。",breath:18,refill:1.5,
+   look:{shirt:"#9fd0d6",pants:"#9fd0d6",marks:[["swell","legB"]]},
+   why:"走不動，但呼吸、循環、意識都正常，屬於黃色。"}
+  ,{who:"跌坐在地的老太太",walk:false,walkLine:"屁股這邊好痛…腿動不了…",breath:22,refill:1.8,
+   look:{shirt:"#b98fa6",pants:"#5b5560",marks:[["bruise","thighB"]]},
+   why:"無法行走，但三項指標都在正常範圍，分為黃色。年長者可能有髖部骨折，之後要再評估。"}
+  ,{who:"雙腿被壓過的工人",walk:false,walkLine:"兩條腿都沒力…站不起來。",breath:26,refill:1.5,
+   look:{shirt:"#e3c23a",pants:"#39424f",marks:[["dust","legT"],["deform","legB"]]},
+   why:"呼吸 26 次沒有超過 30、回填在 2 秒內、能聽從指令，所以是黃色。"}
+  ,{who:"不停尖叫的女子",walk:false,walkLine:"啊——！好痛！我的腿！（大聲尖叫）",breath:28,refill:1,
+   look:{shirt:"#d46a8c",pants:"#2e3440",marks:[["deform","legT"]]},
+   why:"疼痛和尖叫都不是 START 的分類標準。呼吸 28 次未超過 30，循環與意識正常，分為黃色。"}
+  ,{who:"背痛不敢動的駕駛",walk:false,walkLine:"背好痛…腳麻麻的，不敢動。",breath:16,refill:1,
+   look:{shirt:"#56708f",pants:"#3b3b3b",marks:[["bruise","torso"]]},
+   why:"可能有脊椎傷害，不要勉強他站起來。三項指標正常，分為黃色。"}
+  ,{who:"頭暈站不穩的孕婦",walk:false,walkLine:"頭好暈…一站起來就要倒下去。",breath:22,refill:1.5,
+   look:{shirt:"#e6b7a0",pants:"#5a4b52",marks:[]},
+   why:"無法行走，但呼吸、循環、意識正常，初步分為黃色，之後要優先重新評估。"}
+  ,{who:"大腿變形的機車騎士",walk:false,walkLine:"大腿…整個歪掉了…動不了…",breath:26,refill:1.8,
+   look:{shirt:"#30343c",pants:"#4a5a78",marks:[["deform","thighB"],["scrape","legB"]]},
+   why:"目前三項指標都沒有超標，分為黃色。大腿骨折可能內出血，要記得回頭重新評估循環。"}
+  ,{who:"臉部燒傷的男子",walk:false,walkLine:"臉好燙…眼睛睜不開…看不到路…",breath:24,refill:1.5,
+   look:{shirt:"#7b6a55",pants:"#3a3a3a",marks:[["burn","head"]],eyes:"closed"},
+   why:"看不到路所以無法自己走。三項指標正常，分為黃色；臉部燒傷可能讓呼吸道腫起來，要優先重新評估。"}
+  ,{who:"嚇到腿軟的學生",walk:false,walkLine:"（全身發抖）我…我腿軟…站不起來…",breath:28,refill:1,
+   look:{shirt:"#f0f0f0",pants:"#5a2d2d",marks:[]},
+   why:"沒有明顯外傷，但走不了就不能算綠色。照流程檢查後三項正常，分為黃色。"}
+  ,{who:"被碎玻璃割傷的店員",walk:false,walkLine:"到處都在流血…腳底有玻璃，沒辦法走。",breath:20,refill:1.5,
+   look:{shirt:"#4f8f6b",pants:"#2b2f3a",marks:[["blood","legB"],["blood","torso"],["scrape","handT"]]},
+   why:"傷口很多、看起來很可怕，但呼吸、循環、意識都正常，依標準是黃色。"}
+  /* 紅色：呼吸超過 30 次 */
+  ,{who:"胸口撞到方向盤的駕駛",walk:false,walkLine:"（大口喘）胸口…吸不到氣…",breath:40,
+   look:{shirt:"#6f7f99",pants:"#3a3a40",marks:[["bruise","torso"]]},
+   why:"呼吸每分鐘 40 次，超過 30 次就是紅色，不需要再往下檢查。"}
+  ,{who:"吸入濃煙的住戶",walk:false,walkLine:"（邊咳邊喘）喉嚨…好燒…",breath:34,
+   look:{shirt:"#bfa07a",pants:"#4a4a4a",marks:[["dust","torso"]]},
+   why:"呼吸 34 次已超過 30 次，代表呼吸窘迫，分為紅色。"}
+  ,{who:"看不出外傷的老太太",walk:false,walkLine:"我…沒事…只是…好喘…",breath:38,
+   look:{shirt:"#a7a0c0",pants:"#57505c",marks:[]},
+   why:"外表沒有傷口不代表沒事。呼吸 38 次超過 30 次，分為紅色。"}
+  ,{who:"肋骨劇痛的搬運工",walk:false,walkLine:"一吸氣就痛…（呼吸又淺又快）",breath:44,
+   look:{shirt:"#c0562f",pants:"#444a52",marks:[["bruise","belly"]]},
+   why:"呼吸又淺又快，每分鐘 44 次，遠超過 30 次，分為紅色。"}
+  /* 紅色：循環不足 */
+  ,{who:"腹部被刺傷的男子",walk:false,walkLine:"肚子…好冷…",breath:26,pulse:false,refill:4,pale:true,
+   look:{shirt:"#d9d4c7",pants:"#38404c",marks:[["blood","belly"]]},
+   why:"呼吸沒超過 30 次，但摸不到手腕脈搏、回填 4 秒，循環不足，分為紅色。"}
+  ,{who:"安靜不說話的老人",walk:false,walkLine:"（很小聲）我…好累…想睡…",breath:22,pulse:false,refill:3.5,pale:true,
+   look:{shirt:"#8f9488",pants:"#514a40",marks:[]},
+   why:"安靜的傷患往往比大叫的更危險。他摸不到脈搏、回填超過 2 秒，可能已經休克，分為紅色。"}
+  ,{who:"手臂大量出血的工人",walk:false,walkLine:"手…血止不住…頭好昏…",breath:28,pulse:false,refill:3,pale:true,
+   look:{shirt:"#e08a2e",pants:"#3d4654",marks:[["pool","handT"]]},
+   why:"回填超過 2 秒、摸不到脈搏就是紅色。可以先快速幫他上止血帶，再去評估下一位。"}
+  ,{who:"被車撞倒的行人",walk:false,walkLine:"下半身…動不了…好渴…",breath:24,pulse:false,refill:3,pale:true,
+   look:{shirt:"#5f86b3",pants:"#33363d",marks:[["bruise","thighB"],["deform","legT"]]},
+   why:"看不到大量出血，但臉色蒼白、摸不到脈搏、回填 3 秒，可能有骨盆內出血，分為紅色。"}
+  /* 紅色：無法聽從指令 */
+  ,{who:"胡言亂語的男子",walk:false,walkLine:"（雙手亂揮）走開…我要回家…",breath:20,obey:false,
+   mindLine:"你是誰…不要碰我…（沒有照你說的握手）",
+   look:{shirt:"#4c5d3f",pants:"#2e2e2e",marks:[["blood","head"]]},
+   why:"會說話不等於意識正常。他無法聽從簡單指令，可能有腦部傷害，分為紅色。"}
+  ,{who:"從瓦礫堆救出的女子",walk:false,walkLine:"（沒有回應，但胸口有起伏）",breath:14,obey:false,
+   mindLine:"（沒有任何反應，手是軟的）",
+   look:{shirt:"#b3a58c",pants:"#55504a",marks:[["dust","torso"],["dust","legT"]],eyes:"closed"},
+   why:"有呼吸、循環也正常，但完全無法聽從指令，分為紅色。"}
+  ,{who:"一直重複同一句話的老先生",walk:false,walkLine:"現在幾點…現在幾點…",breath:18,obey:false,
+   mindLine:"現在幾點…（看著你，但沒有握手）",
+   look:{shirt:"#9a8f7a",pants:"#48423a",marks:[["bruise","head"]]},
+   why:"眼睛睜著、會說話，卻無法照指令做動作，仍然算「無法聽從簡單指令」，分為紅色。"}
+  ,{who:"眼神呆滯的年輕人",walk:false,walkLine:"（眼睛半睜，沒有回答）",breath:24,obey:false,
+   mindLine:"（眼神呆滯，手沒有動）",
+   look:{shirt:"#2f6f8f",pants:"#2a2a30",marks:[],eyes:"half"},
+   why:"呼吸和循環都正常，要一直檢查到意識這一步才會發現問題：無法聽從指令，分為紅色。"}
+  /* 紅色：打開呼吸道後恢復呼吸 */
+  ,{who:"口鼻有血的傷者",walk:false,breath:0,airway:10,
+   look:{shirt:"#73655a",pants:"#333",marks:[["blood","head"]],eyes:"closed"},
+   why:"原本沒有呼吸，打開呼吸道後恢復，分為紅色。他的呼吸道需要有人持續維持。"}
+  ,{who:"被拖出車外的駕駛",walk:false,breath:0,airway:22,
+   look:{shirt:"#3f4f7a",pants:"#2b2b2b",marks:[["bruise","head"]],eyes:"closed"},
+   why:"只要是「打開呼吸道才恢復呼吸」，不管恢復後每分鐘幾次，都是紅色。"}
+  /* 黑色 */
+  ,{who:"胸口被重物壓住的傷者",walk:false,breath:0,airway:0,pale:true,
+   look:{shirt:"#7a7468",pants:"#3a3833",marks:[["dust","torso"]],eyes:"closed"},
+   why:"打開呼吸道後仍然沒有呼吸，在大量傷患現場分為黑色，不在此時做心肺復甦術。"}
+  ,{who:"頭部嚴重外傷的傷者",walk:false,breath:0,airway:0,pale:true,
+   look:{shirt:"#50607a",pants:"#2c2c2c",marks:[["pool","head"]],eyes:"closed"},
+   why:"沒有呼吸，打開呼吸道也沒有恢復，分為黑色。把時間留給還有機會救回來的人。"}
+  ,{who:"全身燒傷的傷者",walk:false,breath:0,airway:0,pale:true,
+   look:{shirt:"#4a3a30",pants:"#2a2420",marks:[["burn","torso"],["burn","legT"]],eyes:"closed"},
+   why:"不能只看外觀就判定，一樣要先看呼吸、打開呼吸道；確認仍無呼吸後才分為黑色。"}
+  ,{who:"像是睡著的老人",walk:false,breath:0,airway:0,pale:true,
+   look:{shirt:"#a8a294",pants:"#5a5348",marks:[],eyes:"closed"},
+   why:"沒有外傷、看起來像睡著，也要照流程檢查。打開呼吸道後仍無呼吸，分為黑色。"}
+  ,{who:"家屬在旁哭喊的傷者",walk:false,walkLine:"（旁邊的人大喊：快救他！他剛剛還在動！）",breath:0,airway:0,pale:true,
+   look:{shirt:"#8a5a5a",pants:"#35353d",marks:[["bruise","torso"]],eyes:"closed"},
+   why:"檢傷最困難的是壓力。即使家屬在旁邊哭喊，打開呼吸道後仍無呼吸，還是要分為黑色，繼續去救下一位。"}
 ].map((c,i)=>Object.assign({breath:16,pulse:true,refill:1,obey:true,airway:0},c,{
   look:Object.assign({skin:i%4},c.look)
 }));
@@ -447,6 +603,13 @@ function start_(p){
   need.push("mind");
   if(!p.obey) return {a:"red",need};
   return {a:"yellow",need};
+}
+/* 每局從題庫抽 10 題：各顏色固定比例，讓每局難度相近、排行榜才公平 */
+const DRAW={red:4,yellow:3,green:2,black:1};
+function drawDeck(){
+  const g={};CASES.forEach(c=>{const k=start_(c).a;(g[k]=g[k]||[]).push(c)});
+  let d=[];Object.keys(DRAW).forEach(k=>{d=d.concat(shuffle(g[k]||[]).slice(0,DRAW[k]))});
+  return shuffle(d);
 }
 const NEED_NAME={walk:"喊話看能否行走",breath:"看胸口數呼吸",airway:"打開呼吸道",circ:"摸脈搏或壓指甲",mind:"拍肩請他握手"};
 
@@ -538,7 +701,7 @@ function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor
 function say(me,them){$("bubble").innerHTML=(me?`<div class="me">你：${me}</div>`:"")+(them||"")}
 
 let hinted=false;
-function startGame(){if(!hinted){hinted=true;setTimeout(()=>$("book").classList.add("hint"),900)}deck=shuffle(CASES);idx=0;score=0;right=0;mistakes=[];$("score").textContent=0;show("game");deal()}
+function startGame(){if(!hinted){hinted=true;setTimeout(()=>$("book").classList.add("hint"),900)}deck=drawDeck();idx=0;score=0;right=0;mistakes=[];$("score").textContent=0;show("game");deal()}
 
 function deal(){
   cur=deck[idx];locked=false;done=new Set();
@@ -669,6 +832,64 @@ function finish(){
     p>=.5?"及格了，但有些關鍵步驟還不熟，建議再看一次檢傷原則。":"檢傷的順序還不太熟，先看一次 START 原則再挑戰。";
   $("review").innerHTML=mistakes.length?"<h2>需要複習的傷患</h2>"+mistakes.map(({c,choice,a})=>
     `<div class="item"><b>${c.who}</b><small>你選：${choice?COLORS[choice].short:"未作答"}　正確：${COLORS[a].short}</small><br>${c.why}</div>`).join(""):"";
+  lbAfterGame();
+}
+
+/* ---- 排行榜（Supabase）----
+   只放「公開」的 publishable / anon key；千萬不要把 service_role key 放進網頁。
+   兩個欄位留空的話，遊戲照常可玩，只是不顯示排行榜。 */
+const SUPABASE_URL="https://hhsfehaozltfewmfjdho.supabase.co";
+const SUPABASE_KEY="sb_publishable_Vaw-s5RPSU2rc5179kkJuw_p3T8nQ8W";
+const LB_ON=!!(SUPABASE_URL&&SUPABASE_KEY),LB_TOP=20;
+let sent=false,myName="";
+function lbFetch(path,opt){
+  opt=opt||{};
+  return fetch(SUPABASE_URL+"/rest/v1/"+path,Object.assign({},opt,{headers:Object.assign(
+    {apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"},opt.headers)}))
+    .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r});
+}
+function lbNote(el,txt){el.textContent="";const d=document.createElement("div");d.className="empty";d.textContent=txt;el.appendChild(d)}
+async function lbLoad(el){
+  lbNote(el,"讀取中…");
+  try{
+    const rows=await(await lbFetch("triage_leaderboard?select=name,score,correct&order=score.desc,created_at.asc&limit="+LB_TOP)).json();
+    if(!rows.length){lbNote(el,"還沒有人上榜，快來當第一名！");return}
+    el.textContent="";
+    rows.forEach((r,i)=>{
+      const row=document.createElement("div");row.className="r"+(myName&&r.name===myName?" me":"");
+      [["b",i+1],["span",r.name,"n"],["span","答對 "+r.correct,"c"],["span",r.score,"s"]].forEach(([tag,txt,cls])=>{
+        const e=document.createElement(tag);if(cls)e.className=cls;e.textContent=txt;row.appendChild(e)});
+      el.appendChild(row);
+    });
+  }catch(_){lbNote(el,"排行榜暫時讀取不到，請稍後再試。")}
+}
+function lbAfterGame(){
+  if(!LB_ON)return;
+  sent=false;$("lbSubmit").hidden=false;$("lbWrap").hidden=false;
+  $("lbSend").disabled=false;$("lbMsg").textContent="同一個暱稱只會保留最高分。";
+  if(!$("lbName").value){try{$("lbName").value=localStorage.getItem("triageName")||""}catch(_){}}
+  lbLoad($("lbResult"));
+}
+if(LB_ON){
+  $("lbOpen").hidden=false;
+  $("lbOpen").onclick=()=>{$("lb").classList.add("show");lbLoad($("lbList"))};
+  $("lbClose").onclick=()=>$("lb").classList.remove("show");
+  $("lb").addEventListener("click",e=>{if(e.target===$("lb"))$("lb").classList.remove("show")});
+  $("lbForm").addEventListener("submit",async e=>{
+    e.preventDefault();if(sent)return;
+    const name=Array.from($("lbName").value.trim().replace(/\s+/g," ")).slice(0,12).join("");
+    if(!name)return;
+    $("lbSend").disabled=true;$("lbMsg").textContent="送出中…";
+    try{
+      await lbFetch("triage_scores",{method:"POST",headers:{Prefer:"return=minimal"},
+        body:JSON.stringify({name:name,score:score,correct:right})});
+      sent=true;myName=name;try{localStorage.setItem("triageName",name)}catch(_){}
+      $("lbMsg").textContent="已送出！你的成績："+score+" 分";
+      lbLoad($("lbResult"));
+    }catch(_){$("lbSend").disabled=false;$("lbMsg").textContent="送出失敗，請檢查網路後再試一次。"}
+  });
+}else{
+  $("lbForm").addEventListener("submit",e=>e.preventDefault());
 }
 
 function flyOut(c){const d={red:[1,0],green:[-1,0],yellow:[0,-1],black:[0,1]}[c];
