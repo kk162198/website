@@ -244,6 +244,7 @@ body.playing .book{display:flex}
 .lb-form .primary{width:auto;margin:0;min-height:48px;padding:0 18px;font-size:1rem;flex:none}
 .lb-form .primary[disabled]{opacity:.6}
 #lbTitle{color:var(--tag-ink)}
+.lb-more{display:block;width:100%;border:none;background:transparent;color:var(--muted-on-field);font-size:.9rem;font-weight:700;padding:6px 0;min-height:40px;text-align:right}
 [hidden]{display:none!important}
 
 /* 新手教學：一次只亮一個要按的地方，用手指圖示帶著做 */
@@ -313,15 +314,10 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
 
   <button class="ghost tut-open" id="tutOpen">▶ 新手教學（跟著手指做一次）</button>
 
-  <div class="panel">
-    <h2>怎麼檢查</h2>
-    <ul>
-      <li><b>📢 喊話</b>：「能走的人請走過來！」看他會不會自己走</li>
-      <li><b>點臉</b>：拍肩呼叫，請他握你的手，看意識</li>
-      <li><b>點胸口</b>：看胸部起伏，數呼吸次數</li>
-      <li><b>點手腕</b>：摸橈動脈脈搏</li>
-      <li><b>點指尖</b>：按壓指甲，看微血管回填幾秒</li>
-    </ul>
+  <div class="panel" id="lbHome" hidden>
+    <h2>🏆 排行榜</h2>
+    <div class="lb" id="lbHomeList"></div>
+    <button class="lb-more" id="lbOpen">看前 20 名 ›</button>
   </div>
 
   <div class="panel">
@@ -345,7 +341,6 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
 
   <p class="note">小技巧：檢查照 START 的順序做，一找到決定性的結果就可以分類，不需要全部檢查。內容依照 START 檢傷分類法編寫，報告前請對照課本確認。</p>
   <div class="dock"><div class="row">
-    <button class="ghost" id="lbOpen" hidden>🏆 排行榜</button>
     <button class="primary" id="go">開始檢傷</button>
   </div></div>
 </section>
@@ -757,7 +752,8 @@ async function keepAwake(on){
   }catch(_){}
 }
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));window.scrollTo(0,0);
-  document.body.classList.toggle("playing",id==="game");if(id!=="game")book(false);keepAwake(id==="game")}
+  document.body.classList.toggle("playing",id==="game");if(id!=="game")book(false);keepAwake(id==="game");
+  if(id==="start"&&LB_ON)lbLoad($("lbHomeList"),LB_HOME)}
 function book(open){
   $("book").classList.toggle("open",open);$("bookShade").classList.toggle("open",open);
   $("bookTab").setAttribute("aria-expanded",open);
@@ -913,7 +909,7 @@ function finish(){
    兩個欄位留空的話，遊戲照常可玩，只是不顯示排行榜。 */
 const SUPABASE_URL="https://hhsfehaozltfewmfjdho.supabase.co";
 const SUPABASE_KEY="sb_publishable_Vaw-s5RPSU2rc5179kkJuw_p3T8nQ8W";
-const LB_ON=!!(SUPABASE_URL&&SUPABASE_KEY),LB_TOP=20;
+const LB_ON=!!(SUPABASE_URL&&SUPABASE_KEY),LB_TOP=20,LB_HOME=5;
 let sent=false,myName="";
 function lbFetch(path,opt){
   opt=opt||{};
@@ -922,10 +918,10 @@ function lbFetch(path,opt){
     .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r});
 }
 function lbNote(el,txt){el.textContent="";const d=document.createElement("div");d.className="empty";d.textContent=txt;el.appendChild(d)}
-async function lbLoad(el){
+async function lbLoad(el,n){
   lbNote(el,"讀取中…");
   try{
-    const rows=await(await lbFetch("triage_leaderboard?select=name,score,correct&order=score.desc,created_at.asc&limit="+LB_TOP)).json();
+    const rows=await(await lbFetch("triage_leaderboard?select=name,score,correct&order=score.desc,created_at.asc&limit="+(n||LB_TOP))).json();
     if(!rows.length){lbNote(el,"還沒有人上榜，快來當第一名！");return}
     el.textContent="";
     rows.forEach((r,i)=>{
@@ -944,7 +940,8 @@ function lbAfterGame(){
   lbLoad($("lbResult"));
 }
 if(LB_ON){
-  $("lbOpen").hidden=false;
+  /* 首頁直接顯示前 5 名，回到首頁時重新讀取 */
+  $("lbHome").hidden=false;lbLoad($("lbHomeList"),LB_HOME);
   $("lbOpen").onclick=()=>{$("lb").classList.add("show");lbLoad($("lbList"))};
   $("lbClose").onclick=()=>$("lb").classList.remove("show");
   $("lb").addEventListener("click",e=>{if(e.target===$("lb"))$("lb").classList.remove("show")});
