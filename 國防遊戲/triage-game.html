@@ -469,7 +469,7 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
     <p class="verdict ok" id="tutDoneT">✓ 教學完成</p>
     <div class="row">
       <button class="ghost" id="tutAgain">再看一次</button>
-      <button class="primary" id="tutPlay">開始檢傷</button>
+      <button class="primary" id="tutPlay">回到首頁</button>
     </div>
   </div>
 </div>
@@ -1082,7 +1082,7 @@ function tutExit(){
 }
 $("tutOpen").onclick=()=>tutStart(false);
 $("tutAgain").onclick=()=>tutStart(true);
-$("tutPlay").onclick=()=>{$("tutDone").classList.remove("show");startGame()};
+$("tutPlay").onclick=()=>{$("tutDone").classList.remove("show");show("start")};
 $("tutSkip").onclick=()=>{const play=tut&&tut.play;tutExit();if(play)startGame();else show("start")};
 /* 第一次按「開始檢傷」先帶一次教學，之後直接開始 */
 $("go").onclick=()=>tutSeen()?startGame():tutStart(true);$("again").onclick=startGame;$("next").onclick=next;
