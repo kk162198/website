@@ -209,11 +209,12 @@ body.playing .book{display:flex}
 .book-head h2{margin:0;font-size:1.4rem;font-weight:900}
 .book-head .book-close{border:none;background:#7a2a22;color:#f3e6c8;border-radius:10px;padding:0 16px;min-height:44px;font-weight:700;font-size:1rem}
 .book .sub2{color:var(--tag-muted);font-size:.85rem;margin:0 0 14px}
-.flow{list-style:none;margin:0 0 18px;padding:0;counter-reset:s}
-.flow li{position:relative;font-size:1.05rem;padding:12px 14px 12px 46px;margin-bottom:8px;background:rgba(255,255,255,.45);border-radius:8px;line-height:1.6;counter-increment:s}
-.flow li::before{content:counter(s);position:absolute;left:10px;top:10px;width:24px;height:24px;border-radius:50%;background:var(--tag-ink);color:var(--tag);font:800 .95rem/24px var(--num);text-align:center}
-.flow .go{display:block;font-size:.9rem;color:var(--tag-muted)}
-.flow .go b{color:var(--tag-ink)}
+/* 手冊裡的流程圖：由首頁那張複製過來（見 script 最後），這裡只調整成米色底上的配色 */
+.book .flowchart{margin:0 auto 18px}
+.book .fc-box{stroke:var(--field-2)}
+.book .fc-l{fill:var(--tag-muted);font-weight:700}
+.book .fc-a{stroke:var(--tag-muted)}
+.book .fc-h{fill:var(--tag-muted)}
 .book h3{font-size:1rem;margin:0 0 8px}
 .book table{width:100%;border-collapse:collapse;font-size:1rem;margin-bottom:16px}
 .book td{padding:7px 4px;border-bottom:1px dashed var(--tag-edge);vertical-align:top;line-height:1.5}
@@ -558,13 +559,7 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
       <button class="book-close" id="bookClose">關閉</button>
     </div>
     <p class="sub2">照順序往下判斷，一旦符合就停下來分類。計時不會暫停喔！</p>
-    <ol class="flow">
-      <li>能自己走路嗎？<span class="go">能 → <b>綠色</b>；不能 → 往下</span></li>
-      <li>有呼吸嗎？<span class="go">沒有 → 打開呼吸道：仍沒有 <b>黑色</b>，恢復呼吸 <b>紅色</b></span></li>
-      <li>呼吸每分鐘超過 30 次？<span class="go">是 → <b>紅色</b>；30 次以下 → 往下</span></li>
-      <li>循環正常嗎？<span class="go">回填超過 2 秒或摸不到手腕脈搏 → <b>紅色</b></span></li>
-      <li>能聽從簡單指令嗎？<span class="go">不能 → <b>紅色</b>；能 → <b>黃色</b></span></li>
-    </ol>
+    <div id="bookFlow"></div>
     <h3>怎麼檢查</h3>
     <table>
       <tr><td>📢 喊話</td><td>「能走的人請走過來！」</td></tr>
@@ -1241,6 +1236,11 @@ document.addEventListener("keydown",e=>{
   if(m){e.preventDefault();answer(m)}
 });
 $("bookShade").onclick=()=>book(false);$("bookClose").onclick=()=>book(false);
+/* 檢傷手冊沿用首頁的 START 流程圖：只維護一份，改首頁那張兩邊都會更新 */
+(()=>{const src=document.querySelector("#start .flowchart"),slot=$("bookFlow");if(!src||!slot)return;
+  const c=src.cloneNode(true),m=c.querySelector("marker");
+  if(m){m.id="fcB";c.querySelectorAll("[marker-end]").forEach(p=>p.setAttribute("marker-end","url(#fcB)"))}
+  slot.appendChild(c)})();
 $("bookTab").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();book(!$("book").classList.contains("open"))}});
 /* 手冊把手：點一下切換；往上拉打開、往下拉關閉，拖曳時跟著手指 */
 (()=>{const g=$("bookTab"),b=$("book");let y0=null,base=0,dy=0;
