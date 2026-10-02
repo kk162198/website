@@ -224,6 +224,17 @@ body.playing .book{display:flex}
 .book .swatches div{display:flex;align-items:center;gap:6px;padding:7px 8px;background:rgba(255,255,255,.45);border-radius:6px}
 .book .swatches i{width:14px;height:14px;border-radius:3px;flex:none}
 
+/* 音效開關 */
+.home-row{display:flex;gap:10px;margin-bottom:16px;flex:none}
+.home-row .tut-open{margin:0;width:auto;flex:1;min-width:0}
+.shout-row{display:flex;gap:8px;margin-bottom:8px;flex:none}
+.shout-row .shout{margin:0;width:auto;flex:1;min-width:0}
+.snd,.home-row .snd{flex:none;width:56px;padding:0;font-size:1.3rem;line-height:1}
+.snd-g{width:48px;border:2px solid rgba(239,228,200,.45);background:transparent;color:var(--ink-on-field);border-radius:12px}
+.snd[aria-pressed="false"]{opacity:.6}
+body.tut .snd-g{opacity:.35}
+@media (max-height:640px){.shout-row{margin-bottom:6px}}
+
 /* 答對回饋與連續答對 */
 .combo{display:inline-block;margin-right:6px;padding:1px 7px;border-radius:999px;background:var(--yellow);color:#2a2418;font-weight:900;font-size:.72rem;line-height:1.5;vertical-align:middle}
 .combo.pop{animation:comboPop .45s cubic-bezier(.2,1.6,.4,1)}
@@ -357,7 +368,10 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
   </h1>
   <p class="lead">發生大量傷患事件，你是第一位到場的救護員。每局會從 50 位傷患中抽出 10 位，每位傷患你有 20 秒：親手檢查他的狀況，聽他怎麼回應，再決定該給哪一種顏色的檢傷卡。</p>
 
-  <button class="ghost tut-open" id="tutOpen">▶ 新手教學（跟著手指做一次）</button>
+  <div class="home-row">
+    <button class="ghost tut-open" id="tutOpen">▶ 新手教學（跟著手指做一次）</button>
+    <button class="ghost snd" id="sndHome" type="button"></button>
+  </div>
 
   <div class="panel" id="lbHome" hidden>
     <h2>🏆 排行榜</h2>
@@ -391,7 +405,10 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
   </div>
   <div class="timer"><i id="bar"></i></div>
 
-  <button class="shout" id="shout">📢 喊話：「能走的人請走過來！」</button>
+  <div class="shout-row">
+    <button class="shout" id="shout">📢 喊話：「能走的人請走過來！」</button>
+    <button class="snd snd-g" id="sndGame" type="button"></button>
+  </div>
 
   <div class="scene" id="scene">
     <div class="bubble" id="bubble"></div>
@@ -809,6 +826,48 @@ let tut=null; /* 教學進行中：{pi:第幾位, si:第幾步, play:結束後�
 
 /* 手機震動回饋（Android 支援；iPhone 會自動忽略） */
 function buzz(p){try{if(navigator.vibrate)navigator.vibrate(p)}catch(_){}}
+
+/* ---- 音效：用 Web Audio 即時合成，不需要音檔 ----
+   瀏覽器規定要先有使用者操作才能出聲，所以第一次觸碰時才建立 AudioContext。
+   靜音設定存在 localStorage「triageMute」。 */
+let actx=null,muted=false;try{muted=localStorage.getItem("triageMute")==="1"}catch(_){}
+function audio(){
+  if(muted)return null;
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;
+    actx=actx||new AC();if(actx.state==="suspended")actx.resume();return actx;
+  }catch(_){return null}
+}
+/* f：頻率、at：延後幾秒、dur：長度、f2：滑到的頻率（可省略） */
+function tone(f,at,dur,type,vol,f2){
+  const c=audio();if(!c)return;
+  const o=c.createOscillator(),g=c.createGain(),t0=c.currentTime+at;
+  o.type=type||"sine";o.frequency.setValueAtTime(f,t0);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t0+dur);
+  g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(vol,t0+.012);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
+  o.connect(g);g.connect(c.destination);o.start(t0);o.stop(t0+dur+.03);
+}
+const semi=n=>Math.pow(2,n/12);
+const sfx={
+  tap(){tone(880,0,.05,"triangle",.07)},                                    /* 點身體檢查 */
+  tick(){tone(1100,0,.06,"square",.035)},                                   /* 最後 5 秒倒數 */
+  ok(n){                                                                    /* 答對：連對越多音越高 */
+    const b=523.25*semi(2*Math.min(Math.max(n-1,0),COMBO_MAX));
+    tone(b,0,.14,"triangle",.16);tone(b*semi(4),.08,.14,"triangle",.16);tone(b*semi(7),.16,.22,"triangle",.17);
+    if(n>=2)tone(b*2,.27,.3,"sine",.13);
+  },
+  guess(){tone(523.25,0,.16,"triangle",.12)},                               /* 猜中：只有一聲 */
+  bad(){tone(210,0,.3,"square",.07,120);tone(105,0,.3,"sine",.16,70)},      /* 答錯、逾時 */
+  nope(){tone(180,0,.09,"sine",.14,130)},                                   /* 教學中做錯動作 */
+  win(){[0,4,7,12].forEach((k,i)=>tone(523.25*semi(k),i*.11,i===3?.5:.16,"triangle",.16))},
+  end(){tone(392,0,.18,"triangle",.14);tone(523.25,.16,.32,"triangle",.14)}
+};
+function setMute(m,quiet){
+  muted=m;try{localStorage.setItem("triageMute",m?"1":"0")}catch(_){}
+  document.querySelectorAll(".snd").forEach(b=>{b.textContent=m?"🔇":"🔊";b.setAttribute("aria-pressed",String(!m));
+    b.setAttribute("aria-label",m?"音效：關（按一下開啟）":"音效：開（按一下關閉）");b.title=m?"音效：關":"音效：開"});
+  if(!m&&!quiet)sfx.ok(1);
+}
+document.addEventListener("pointerdown",audio,{passive:true});
 /* 遊戲中讓螢幕保持亮著 */
 let wake=null;
 async function keepAwake(on){
@@ -864,7 +923,7 @@ function tick(){
   $("bar").classList.toggle("low",t<6);
   const s=Math.ceil(Math.max(t,0));
   $("sec").textContent=s;$("sec").classList.toggle("warn",t<6&&t>0);
-  if(s!==lastSec){lastSec=s;if(s<=5&&s>0)buzz(15)}
+  if(s!==lastSec){lastSec=s;if(s<=5&&s>0&&!locked&&!document.hidden){buzz(15);sfx.tick()}}
 }
 document.addEventListener("visibilitychange",()=>{
   if(!$("game").classList.contains("active"))return;
@@ -876,7 +935,7 @@ function markChecked(act){const g=document.querySelector(`.hs[data-act="${act}"]
 function act(a){
   if(locked)return; const p=cur;
   if(tut&&a!==tutWant())return; /* 教學中只接受目前指示的那一步 */
-  buzz(8);
+  buzz(8);sfx.tap();
   const before={};["walk","breath","circ","mind"].forEach(k=>before[k]=$("l-"+k).textContent);
   act_(a,p);
   ["walk","breath","circ","mind"].forEach(k=>{const d=$("l-"+k);if(d.textContent!==before[k]){d.classList.remove("new");void d.offsetWidth;d.classList.add("new")}});
@@ -940,7 +999,7 @@ function answer(choice){
     chips=chip("基本 "+BASE)+chip("速度 +"+speed);
     if(missed.length){
       /* 猜中的：分數減半，不累計連續答對（也不中斷） */
-      pts=Math.round(raw/2);chips+=chip("猜中 ÷2");
+      pts=Math.round(raw/2);chips+=chip("猜中 ÷2");sfx.guess();
       proc=`答對了，但你沒有做「${missed.map(m=>NEED_NAME[m]).join("、")}」就分類，這次算是猜中的，分數減半，也不算進連續答對。`;
     }else{
       streak++;bestStreak=Math.max(bestStreak,streak);
@@ -948,12 +1007,13 @@ function answer(choice){
       if(streak>=2)chips+=chip(`🔥 ${streak} 連對 ${multTxt(streak)}`,"x");
       proc=extra?`檢查完整！不過有 ${extra} 項檢查其實不需要做，找到決定性的結果就可以直接分類，省下的時間能救下一位。`:"檢查順序完美，沒有多做任何一步。";
       if(streak<=COMBO_MAX&&idx<deck.length-1)proc+=` 下一位再答對，分數 ${multTxt(streak+1)}。`;
+      sfx.ok(streak);
       burst(streak>=2?`${streak} 連對！${multTxt(streak)}`:"判斷正確！",pts,streak>=2);
     }
     buzz(streak>=3&&!missed.length?[20,40,20,40,50]:[20,40,20]);
     score+=pts;right++;setScore(score);showCombo(true);
   }else{
-    buzz([80,50,80]);
+    buzz([80,50,80]);sfx.bad();
     streak=0;showCombo(false);
     if(was>=2)chips=chip(`連續答對 ${was} 位中斷`,"lost");
     mistakes.push({c:cur,choice,a});
@@ -978,6 +1038,7 @@ function finish(){
   $("final").textContent=score;$("combo").hidden=true;
   $("acc").textContent=`正確 ${right} / ${deck.length} 位`+(bestStreak>=2?`　最高連續答對 ${bestStreak} 位（加成 +${comboPts} 分）`:"");
   const p=right/deck.length;
+  setTimeout(p>=.8?sfx.win:sfx.end,150);
   $("grade").textContent=p===1?"全部正確！你已經能在壓力下依照 START 原則快速分類。":
     p>=.8?"表現很好，檢傷觀念大致正確，看看下面錯的題目。":
     p>=.5?"及格了，但有些關鍵步驟還不熟，建議再看一次檢傷原則。":"檢傷的順序還不太熟，先看一次 START 原則再挑戰。";
@@ -1146,8 +1207,8 @@ function tutStep(){
 }
 function tutAnswer(choice){
   /* 還沒檢查完、或方向不對：彈回原位，讓指示繼續帶 */
-  if(tutWant()!=="swipe"||choice!==start_(cur).a){scene.style.transform="";stamp.style.opacity=0;buzz(40);return}
-  locked=true;tutClear();flyOut(choice);buzz([20,40,20]);
+  if(tutWant()!=="swipe"||choice!==start_(cur).a){scene.style.transform="";stamp.style.opacity=0;buzz(40);sfx.nope();return}
+  locked=true;tutClear();flyOut(choice);buzz([20,40,20]);sfx.ok(1);
   const me=tut;
   setTimeout(()=>{
     if(tut!==me)return;
@@ -1159,6 +1220,7 @@ function tutExit(){
   tut=null;tutClear();document.body.classList.remove("tut");$("progK").textContent="傷患";
   try{localStorage.setItem("triageTut","1")}catch(_){}
 }
+document.querySelectorAll(".snd").forEach(b=>b.onclick=()=>setMute(!muted));setMute(muted,true);
 $("tutOpen").onclick=()=>tutStart(false);
 $("tutAgain").onclick=()=>tutStart(true);
 $("tutPlay").onclick=()=>{$("tutDone").classList.remove("show");show("start")};
