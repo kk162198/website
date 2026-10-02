@@ -19,6 +19,11 @@ alter table public.triage_scores add  constraint triage_scores_score_check check
 -- 或是直接清空重來：
 --   truncate table public.triage_scores;
 
+-- 1c. 領獎憑證：送出成績的那支手機的憑證雜湊（SHA-256），領獎頁 award.html 用它確認是不是本人的手機
+alter table public.triage_scores add column if not exists claim text;
+alter table public.triage_scores drop constraint if exists triage_scores_claim_check;
+alter table public.triage_scores add  constraint triage_scores_claim_check check (claim is null or claim ~ '^[0-9a-f]{64}$');
+
 create index if not exists triage_scores_name_score_idx
   on public.triage_scores (name, score desc, created_at);
 
@@ -38,10 +43,13 @@ grant select, insert on public.triage_scores to anon, authenticated;
 -- 3. 排行榜檢視表：同一個暱稱只留最高分（同分時取較早的那一筆）
 create or replace view public.triage_leaderboard
   with (security_invoker = on) as
-select distinct on (name) name, score, correct, created_at
+select distinct on (name) name, score, correct, created_at, claim
 from public.triage_scores
 order by name, score desc, created_at asc;
 
 grant select on public.triage_leaderboard to anon, authenticated;
+
+-- 讓 API 立刻認得新欄位
+notify pgrst, 'reload schema';
 
 -- 想清空排行榜時執行：  truncate table public.triage_scores;

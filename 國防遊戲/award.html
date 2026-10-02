@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3a4130">
+<meta name="robots" content="noindex">
+<title>領獎｜檢傷分類：滑動救援</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* 領獎頁：得獎者用「玩遊戲的那支手機」打開，顯示得獎證明給頒獎的人看 */
+:root{
+  --field:#3a4130; --field-2:#2d3326; --ink:#e9ecdf; --muted:#b3b9a4;
+  --tag:#efe4c8; --tag-edge:#d8c9a3; --tag-ink:#2a2418; --tag-muted:#6b604a;
+  --yellow:#e2b21c; --green:#3f8f46;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --num:"Barlow Condensed","Arial Narrow",var(--sans);
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme:dark){:root{--field:#252a1e;--field-2:#1b1f16;--tag:#e6dabb}}
+*,*::before,*::after{box-sizing:inherit}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;font-family:var(--sans);color:var(--ink);background:var(--field);
+  background-image:repeating-linear-gradient(45deg,transparent 0 22px,rgba(0,0,0,.05) 22px 23px)}
+main{flex:1;display:flex;flex-direction:column;justify-content:center;width:100%;max-width:480px;margin:0 auto;
+  padding:calc(env(safe-area-inset-top,0px) + 20px) calc(env(safe-area-inset-right,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 20px) calc(env(safe-area-inset-left,0px) + 16px)}
+button,a.btn{font-family:inherit;cursor:pointer;touch-action:manipulation}
+button:focus-visible,a:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.eyebrow{margin:0 0 12px;text-align:center;font-size:.85rem;font-weight:700;letter-spacing:.14em;color:var(--yellow)}
+.msg{text-align:center;color:var(--muted);line-height:1.8;padding:30px 0}
+/* 得獎證明卡 */
+.cert{position:relative;overflow:hidden;background:var(--tag);color:var(--tag-ink);border-radius:18px;padding:26px 20px 20px;text-align:center;
+  border:3px solid var(--yellow);box-shadow:0 14px 40px rgba(0,0,0,.4)}
+.cert::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:50%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);animation:shine 2.6s linear infinite}
+@keyframes shine{to{left:130%}}
+.cert .medal{font-size:4rem;line-height:1}
+.cert .rank{font-weight:900;font-size:2.6rem;line-height:1.2;margin:6px 0 2px}
+.cert .rank b{font-family:var(--num);font-size:1.5em;font-weight:800;margin:0 .08em}
+.cert .name{font-weight:900;font-size:1.5rem;overflow-wrap:anywhere;margin:10px 0 2px}
+.cert .pts{font-family:var(--num);font-weight:800;font-size:2.4rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.cert .pts small{font-family:var(--sans);font-size:.4em;font-weight:700;margin-left:.2em}
+.cert .ok{font-size:.9rem;color:var(--tag-muted)}
+.cert .ver{display:inline-block;margin-top:14px;border-radius:999px;padding:5px 14px;font-size:.9rem;font-weight:700;background:var(--green);color:#fff}
+.cert .ver.weak{background:var(--tag-muted)}
+.cert .clock{margin-top:12px;padding-top:12px;border-top:2px dashed var(--tag-edge);font-family:var(--num);font-weight:600;font-size:1.5rem;font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.cert .clock small{display:block;font-family:var(--sans);font-size:.5em;font-weight:500;color:var(--tag-muted);letter-spacing:0}
+.tell{text-align:center;margin:16px 0 0;line-height:1.7}
+.card{background:var(--field-2);border-radius:14px;padding:22px 18px;text-align:center;line-height:1.8}
+.card h1{margin:0 0 6px;font-size:1.4rem}
+.card p{margin:0;color:var(--muted)}
+.card p b{color:var(--ink)}
+.row{display:flex;gap:10px;margin-top:18px}
+.btn{flex:1;display:flex;align-items:center;justify-content:center;min-height:52px;border-radius:12px;font-size:1rem;font-weight:700;text-decoration:none;
+  background:transparent;border:2px solid var(--tag);color:var(--ink)}
+.btn.pri{background:var(--tag);color:var(--tag-ink)}
+@media (prefers-reduced-motion:reduce){.cert::after{animation:none;display:none}}
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">檢傷分類：滑動救援 · 領獎</p>
+  <div id="out"><p class="msg">確認中…</p></div>
+  <div class="row">
+    <button class="btn" id="again">重新確認</button>
+    <a class="btn pri" href="./">回到遊戲</a>
+  </div>
+</main>
+<script>
+"use strict";
+/* 與遊戲 index.html 相同的 Supabase 設定（公開的 publishable key） */
+const SUPABASE_URL="https://hhsfehaozltfewmfjdho.supabase.co";
+const SUPABASE_KEY="sb_publishable_Vaw-s5RPSU2rc5179kkJuw_p3T8nQ8W";
+const WINNERS=5, MEDAL={1:"🥇",2:"🥈",3:"🥉",4:"🎖️",5:"🎖️"};
+const $=id=>document.getElementById(id);
+function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function api(path){
+  return fetch(SUPABASE_URL+"/rest/v1/"+path,{headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY}})
+    .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()});
+}
+function ls(k){try{return localStorage.getItem(k)||""}catch(_){return""}}
+/* 這支手機的領獎憑證：遊戲送出成績時把 triageClaim 的 SHA-256 一起存進資料庫，
+   這裡用同一把 key 算出雜湊去比對，所以別人就算取同樣的暱稱也領不到。 */
+async function myHash(){
+  const k=ls("triageClaim");
+  if(!k||!window.crypto||!crypto.subtle)return"";
+  const d=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(k));
+  return Array.from(new Uint8Array(d),b=>b.toString(16).padStart(2,"0")).join("");
+}
+let tick=null;
+function card(title,html){const c=el("div","card");c.appendChild(el("h1","",title));const p=el("p");p.append(...html);c.appendChild(p);return c}
+async function check(){
+  const out=$("out");clearInterval(tick);
+  out.textContent="";out.appendChild(el("p","msg","確認中…"));
+  let rows;
+  try{
+    const q="&order=score.desc,created_at.asc&limit=1000";
+    /* 資料庫還沒加 claim 欄位時，退回只比對暱稱 */
+    try{rows=await api("triage_leaderboard?select=name,score,correct,claim"+q)}
+    catch(_){rows=await api("triage_leaderboard?select=name,score,correct"+q)}
+  }catch(_){
+    out.textContent="";out.appendChild(card("讀取不到排行榜",["請檢查網路後按「重新確認」。"]));return;
+  }
+  const name=ls("triageName"),hash=await myHash().catch(()=>"");
+  let i=hash?rows.findIndex(r=>r.claim&&r.claim===hash):-1,strong=i>=0;
+  if(i<0&&name)i=rows.findIndex(r=>!r.claim&&r.name===name);
+  out.textContent="";
+  if(i>=0&&i<WINNERS){
+    const r=rows[i],rank=i+1,c=el("div","cert");
+    const rk=el("div","rank");rk.append("第",el("b","",String(rank)),"名");
+    const pts=el("div","pts",Number(r.score).toLocaleString("en-US"));pts.appendChild(el("small","","分"));
+    const clock=el("div","clock");
+    const run=()=>{clock.textContent=new Date().toLocaleString("zh-TW",{hour12:false});clock.appendChild(el("small","","時間會跳動＝這是現場畫面，不是截圖"))};
+    c.append(el("div","medal",MEDAL[rank]),rk,el("div","name",r.name),pts,el("div","ok","答對 "+r.correct+" 位"),
+      el("div","ver"+(strong?"":" weak"),strong?"✓ 這支手機驗證通過":"暱稱相符（舊成績，無法驗證手機）"),clock);
+    run();tick=setInterval(run,1000);
+    out.append(c,el("p","tell","恭喜！請把這個畫面拿給頒獎的同學看，就可以領禮物。"));
+  }else if(i>=0){
+    const r=rows[i];
+    out.appendChild(card("這次沒有進前 "+WINNERS+" 名",["「",el("b","",r.name),"」目前排第 ",el("b","",String(i+1))," 名（",el("b","",Number(r.score).toLocaleString("en-US"))," 分）。再挑戰一次，說不定就擠進去了！"]));
+  }else if(name){
+    out.appendChild(card("找不到這支手機的成績",["排行榜上「",el("b","",name),"」的最高分不是用這支手機送出的，或成績還沒送出。請用當時玩遊戲的手機和瀏覽器打開這一頁。"]));
+  }else{
+    out.appendChild(card("這支手機還沒有成績",["要先玩一局並送出成績才會上榜。如果你已經玩過，請用當時玩遊戲的手機和瀏覽器打開這一頁。"]));
+  }
+}
+$("again").onclick=check;
+check();
+</script>
+</body>
+</html>

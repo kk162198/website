@@ -333,6 +333,9 @@ body.tut .snd-g{opacity:.35}
 .lb-form .primary{width:auto;margin:0;min-height:48px;padding:0 18px;font-size:1rem;flex:none}
 .lb-form .primary[disabled]{opacity:.6}
 #lbTitle{color:var(--tag-ink)}
+.lb-links{display:flex;align-items:center;gap:16px}
+.lb-links a{color:var(--muted-on-field);font-size:.9rem;font-weight:700;text-decoration:none;min-height:40px;display:flex;align-items:center;white-space:nowrap}
+.lb-links .lb-more{flex:1;width:auto}
 .lb-more{display:block;width:100%;border:none;background:transparent;color:var(--muted-on-field);font-size:.9rem;font-weight:700;padding:6px 0;min-height:40px;text-align:right}
 [hidden]{display:none!important}
 
@@ -459,7 +462,7 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
   <div class="panel" id="lbHome" hidden>
     <h2>🏆 排行榜</h2>
     <div class="lb" id="lbHomeList"></div>
-    <button class="lb-more" id="lbOpen">看前 20 名 ›</button>
+    <div class="lb-links"><a href="award.html">🎁 領獎</a><a href="stats.html">📊 統計</a><button class="lb-more" id="lbOpen">看前 20 名 ›</button></div>
   </div>
 
   <div class="panel">
@@ -1135,6 +1138,16 @@ const SUPABASE_URL="https://hhsfehaozltfewmfjdho.supabase.co";
 const SUPABASE_KEY="sb_publishable_Vaw-s5RPSU2rc5179kkJuw_p3T8nQ8W";
 const LB_ON=!!(SUPABASE_URL&&SUPABASE_KEY),LB_TOP=20,LB_HOME=5;
 let sent=false,myName="";
+/* 領獎憑證：這支手機第一次送成績時產生一把隨機 key 存在 localStorage「triageClaim」，
+   送出的是它的 SHA-256（claim 欄位）。領獎頁 award.html 用同一把 key 比對，別人取同樣暱稱也冒領不了。 */
+async function claimHash(){
+  try{
+    let k=localStorage.getItem("triageClaim");
+    if(!k){k=Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,"0")).join("");localStorage.setItem("triageClaim",k)}
+    const d=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(k));
+    return Array.from(new Uint8Array(d),b=>b.toString(16).padStart(2,"0")).join("");
+  }catch(_){return null}
+}
 function lbFetch(path,opt){
   opt=opt||{};
   return fetch(SUPABASE_URL+"/rest/v1/"+path,Object.assign({},opt,{headers:Object.assign(
@@ -1175,8 +1188,11 @@ if(LB_ON){
     if(!name)return;
     $("lbSend").disabled=true;$("lbMsg").textContent="送出中…";
     try{
-      await lbFetch("triage_scores",{method:"POST",headers:{Prefer:"return=minimal"},
-        body:JSON.stringify({name:name,score:score,correct:right})});
+      const row={name:name,score:score,correct:right},claim=await claimHash();
+      const post=b=>lbFetch("triage_scores",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify(b)});
+      /* 資料庫還沒有 claim 欄位（尚未重跑 supabase-setup.sql）時會回 4xx，改成不帶憑證再送一次 */
+      try{await post(claim?Object.assign({claim:claim},row):row)}
+      catch(err){if(claim&&/^HTTP 4/.test(err.message))await post(row);else throw err}
       sent=true;myName=name;try{localStorage.setItem("triageName",name)}catch(_){}
       $("lbMsg").textContent="已送出！你的成績："+score+" 分";
       lbLoad($("lbResult"));
