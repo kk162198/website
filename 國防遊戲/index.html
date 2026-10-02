@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3a4130">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="檢傷分類">
+<meta name="format-detection" content="telephone=no">
+<title>檢傷分類：滑動救援</title>
+<!-- 分享預覽（LINE／Discord 等）：網址必須是完整網址。網站若搬家，請一併修改下面的 https://kk162198.github.io/website/ -->
+<meta name="description" content="大量傷患現場，你是第一位到場的救護員。用 START 檢傷法在 20 秒內判斷每位傷患，滑動分到綠、黃、紅、黑四種檢傷卡，挑戰排行榜。">
+<link rel="canonical" href="https://kk162198.github.io/website/%E5%9C%8B%E9%98%B2%E9%81%8A%E6%88%B2/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="學校專案網站">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:title" content="檢傷分類：滑動救援">
+<meta property="og:description" content="大量傷患現場，你是第一位到場的救護員。用 START 檢傷法在 20 秒內判斷每位傷患，滑動分到綠、黃、紅、黑四種檢傷卡，挑戰排行榜。">
+<meta property="og:url" content="https://kk162198.github.io/website/%E5%9C%8B%E9%98%B2%E9%81%8A%E6%88%B2/">
+<meta property="og:image" content="https://kk162198.github.io/website/%E5%9C%8B%E9%98%B2%E9%81%8A%E6%88%B2/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="檢傷分類：滑動救援，綠黃紅黑四種檢傷卡">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --field:#3a4130; --field-2:#2d3326; --ink-on-field:#e9ecdf; --muted-on-field:#b3b9a4;
+  --tag:#efe4c8; --tag-edge:#d8c9a3; --tag-ink:#2a2418; --tag-muted:#6b604a;
+  --ground:#6f6a5c; --ground-2:#5f5a4d;
+  --red:#c8302a; --yellow:#e2b21c; --green:#3f8f46; --black:#1c1c1c;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --num:"Barlow Condensed","Arial Narrow",var(--sans);
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px); --sar:env(safe-area-inset-right,0px);
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){ --field:#252a1e; --field-2:#1b1f16; --tag:#e6dabb; --ground:#57534a; --ground-2:#4a463e; }
+}
+:root[data-theme="dark"]{ --field:#252a1e; --field-2:#1b1f16; --tag:#e6dabb; --ground:#57534a; --ground-2:#4a463e; }
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%;overscroll-behavior:none}
+body{
+  margin:0;min-height:100%;font-family:var(--sans);color:var(--ink-on-field);
+  background:var(--field);
+  background-image:repeating-linear-gradient(45deg,transparent 0 22px,rgba(0,0,0,.05) 22px 23px);
+  -webkit-tap-highlight-color:transparent;overscroll-behavior:none;
+}
+button{font-family:inherit;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;transition:transform .08s,filter .08s}
+button:active{transform:scale(.96);filter:brightness(.92)}
+button:focus{outline:none}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.screen{display:none;max-width:600px;margin:0 auto;
+  padding:calc(var(--sat) + 18px) calc(var(--sar) + 16px) calc(var(--sab) + 20px) calc(var(--sal) + 16px);
+  min-height:100vh;min-height:100dvh}
+.screen.active{display:flex;flex-direction:column}
+.dot{display:inline-block;width:.8em;height:.8em;border-radius:50%;vertical-align:-.05em;margin:0 .2em;border:1px solid rgba(255,255,255,.35)}
+
+/* start */
+h1{font-size:clamp(2rem,8vw,2.8rem);font-weight:900;line-height:1.15;margin:16px 0 8px;letter-spacing:.02em}
+h1 .strip{display:flex;gap:4px;margin-bottom:14px}
+h1 .strip i{display:block;height:10px;flex:1;border-radius:2px}
+.lead{color:var(--muted-on-field);line-height:1.75;margin:0 0 18px}
+.panel{background:var(--field-2);border-radius:10px;padding:16px 16px 8px;margin-bottom:16px}
+.panel h2{font-size:1.05rem;margin:0 0 10px}
+.panel ol,.panel ul{margin:0;padding-left:1.4em;line-height:1.75}
+.panel li{margin-bottom:7px}
+/* START 流程圖 */
+.flowchart{display:block;width:100%;height:auto;max-width:440px;margin:4px auto 10px}
+.fc-box{fill:var(--field);stroke:var(--tag);stroke-width:2}
+.fc-q{font:700 15px var(--sans);fill:var(--ink-on-field);text-anchor:middle;dominant-baseline:central}
+.fc-c{font:900 13px var(--sans);fill:#fff;text-anchor:middle;dominant-baseline:central}
+.fc-l{font:500 12px var(--sans);fill:var(--muted-on-field)}
+.fc-a{fill:none;stroke:var(--muted-on-field);stroke-width:1.8}
+.fc-h{fill:var(--muted-on-field)}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+.legend div{display:flex;align-items:center;gap:10px;background:var(--field-2);padding:10px 12px;border-radius:8px;font-size:.95rem}
+.legend b{font-family:var(--num);font-size:1.5rem;width:1.3em;text-align:center}
+.primary{background:var(--tag);color:var(--tag-ink);border:none;border-radius:12px;font-size:1.15rem;font-weight:700;padding:16px;width:100%;min-height:56px;margin-top:auto}
+.note{font-size:.8rem;color:var(--muted-on-field);margin:0 0 14px;line-height:1.6}
+/* 開始鈕固定在拇指區 */
+.dock{position:sticky;bottom:0;margin:auto calc(-16px - var(--sar)) calc(-20px - var(--sab)) calc(-16px - var(--sal));
+  padding:18px calc(16px + var(--sar)) calc(12px + var(--sab)) calc(16px + var(--sal));
+  background:linear-gradient(to bottom,transparent,var(--field) 16px);z-index:2}
+.dock .primary{box-shadow:0 6px 18px rgba(0,0,0,.35)}
+
+/* game */
+/* 遊戲畫面：剛好一個螢幕高，不捲動 */
+#game.active{height:100vh;height:100dvh;min-height:0;overflow:hidden;
+  padding-top:calc(var(--sat) + 10px);padding-bottom:calc(var(--sab) + var(--peek) + 6px);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.playing{overflow:hidden;position:fixed;inset:0}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;flex:none}
+.hud>div{flex:1}
+.hud .k{font-size:.75rem;color:var(--muted-on-field)}
+.hud .v{font-family:var(--num);font-weight:800;font-size:1.7rem;line-height:1}
+.hud .v.warn{color:#ff8a80;animation:pulse .5s ease-in-out infinite alternate}
+@keyframes pulse{to{transform:scale(1.12)}}
+.timer{height:6px;background:var(--field-2);border-radius:3px;overflow:hidden;margin-bottom:8px;flex:none}
+.timer i{display:block;height:100%;width:100%;background:var(--tag);transform-origin:left}
+.timer i.low{background:var(--red)}
+
+.shout{width:100%;border:2px dashed var(--tag);background:transparent;color:var(--ink-on-field);border-radius:12px;padding:10px;min-height:48px;font-size:1rem;font-weight:700;margin-bottom:8px;flex:none}
+.shout.done{opacity:.45;border-style:solid}
+
+.scene{
+  flex:1 1 auto;min-height:190px;display:flex;flex-direction:column;
+  position:relative;border-radius:14px;overflow:hidden;touch-action:none;
+  background:var(--ground);
+  background-image:radial-gradient(circle at 20% 30%,rgba(255,255,255,.06) 0 2px,transparent 3px),radial-gradient(circle at 70% 80%,rgba(0,0,0,.08) 0 2px,transparent 3px);
+  background-size:26px 26px,34px 34px;
+  box-shadow:0 10px 24px rgba(0,0,0,.3);
+  user-select:none;-webkit-user-select:none;
+  transition:transform .25s ease;will-change:transform;
+}
+.scene.dragging{transition:none}
+.scene.enter{animation:enter .25s ease-out}
+@keyframes enter{from{opacity:0;scale:.94}}
+.scene .name{position:absolute;right:12px;bottom:10px;font-size:.85rem;font-weight:700;color:rgba(255,255,255,.85);text-shadow:0 1px 2px rgba(0,0,0,.5);pointer-events:none;max-width:60%;text-align:right}
+#fig{flex:1 1 auto;min-height:0;position:relative}
+.scene svg{position:absolute;inset:0;display:block;width:100%;height:100%}
+.bubble{
+  position:relative;flex:none;margin:10px 10px 4px;background:#fff;color:#222;border-radius:12px;
+  padding:8px 12px;font-size:.95rem;line-height:1.45;min-height:3.6em;box-shadow:0 3px 8px rgba(0,0,0,.25);z-index:1;
+}
+.scene-air{position:absolute;right:10px;bottom:calc(18% + 20px);z-index:2;
+  border:none;border-radius:14px;background:var(--red);color:#fff;font-weight:900;font-size:1rem;line-height:1.25;
+  padding:9px 14px;min-height:52px;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.45);display:none;
+  animation:glow 1s ease-in-out infinite alternate}
+.scene-air.show{display:block}
+.scene-air small{display:block;font-weight:500;font-size:.75rem;opacity:.9}
+@keyframes glow{to{box-shadow:0 0 0 6px rgba(200,48,42,.35),0 4px 14px rgba(0,0,0,.45)}}
+.bubble::after{content:"";position:absolute;left:34px;bottom:-9px;border:9px solid transparent;border-bottom:0;border-top-color:#fff}
+.bubble .me{color:#6b604a;font-size:.85rem}
+.stamp{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;font-size:3rem;font-weight:900;color:#fff;opacity:0;z-index:3}
+
+.hs{cursor:pointer}
+.hs .ring{fill:rgba(255,255,255,.12);stroke:#fff;stroke-width:2.5;stroke-dasharray:6 5;animation:spin 6s linear infinite;transform-box:fill-box;transform-origin:center}
+.hs.checked .ring{stroke-dasharray:none;fill:rgba(255,255,255,.05);stroke:rgba(255,255,255,.5);animation:none}
+.hs .pill{fill:#fff}
+.hs .pill-t{font:700 15px var(--sans);fill:#2a2418;text-anchor:middle;dominant-baseline:central}
+.hs .hit{fill:transparent}
+.hs:focus{outline:none}
+.hs:focus-visible .ring{stroke:#ffe066;stroke-width:4}
+.hs.checked .pill{fill:rgba(255,255,255,.55)}
+.hs.tap .ring{fill:rgba(255,255,255,.4)}
+@media (hover:hover){.hs:hover .ring{fill:rgba(255,255,255,.25)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.chest{transform-box:fill-box;transform-origin:center}
+@media (prefers-reduced-motion:reduce){.hs .ring{animation:none}.chest{animation:none!important}.scene{transition:none}.scene.enter{animation:none}.scene-air{animation:none}.hud .v.warn{animation:none}}
+
+.log{background:var(--tag);color:var(--tag-ink);border-radius:6px 6px 12px 12px;margin-top:8px;padding:7px 12px 8px;flex:none;position:relative}
+.log h4{position:absolute;top:7px;right:12px;margin:0;font-size:.72rem;color:var(--tag-muted);font-weight:700}
+.log dl{display:grid;grid-template-columns:auto 1fr;gap:1px 10px;margin:0;font-size:.9rem;line-height:1.45}
+.log dt{color:var(--tag-muted)}
+.log dd{margin:0;font-weight:700;min-width:0}
+.log dd.new{animation:flash .6s ease-out}
+@keyframes flash{from{background:rgba(226,178,28,.55)}}
+
+.btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px;flex:none}
+.btns button{border:none;border-radius:12px;padding:8px 2px;min-height:60px;color:#fff;font-weight:900;font-size:1.05rem;line-height:1.25}
+.btns small{display:block;font-weight:500;font-size:.72rem;opacity:.9}
+.b-red{background:var(--red)} .b-yellow{background:var(--yellow);color:#2a2418!important}
+.b-green{background:var(--green)} .b-black{background:var(--black);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+/* 矮螢幕（小手機、網址列展開）再壓縮 */
+@media (max-height:640px){
+  .hud .v{font-size:1.4rem}.hud .k{font-size:.7rem}
+  .shout{min-height:42px;padding:7px;font-size:.92rem;margin-bottom:6px}
+  .bubble{font-size:.88rem;padding:6px 10px;min-height:3.3em;margin:8px 8px 2px}
+  .log{padding:5px 10px 6px}.log dl{font-size:.82rem;line-height:1.35}
+  .btns button{min-height:52px;font-size:.98rem}
+}
+
+/* 檢傷手冊：平常只從畫面最下緣露出一小截「把手」，上滑或點一下就拉出來 */
+:root{--peek:34px}
+.book-shade{position:fixed;inset:0;background:rgba(10,12,8,.45);z-index:11;opacity:0;pointer-events:none;transition:opacity .3s}
+.book-shade.open{opacity:1;pointer-events:auto}
+.book{
+  position:fixed;left:0;right:0;bottom:0;margin:0 auto;width:100%;max-width:600px;height:86vh;height:86dvh;z-index:12;
+  display:none;flex-direction:column;
+  transform:translateY(calc(100% - var(--peek) - var(--sab)));transition:transform .34s cubic-bezier(.3,.7,.2,1);
+  background:var(--tag);color:var(--tag-ink);
+  background-image:repeating-linear-gradient(transparent 0 29px,rgba(107,96,74,.18) 29px 30px);
+  border-radius:16px 16px 0 0;box-shadow:0 -3px 12px rgba(0,0,0,.28);
+}
+body.playing .book{display:flex}
+.book.open{transform:translateY(0);box-shadow:0 -12px 34px rgba(0,0,0,.45)}
+.book.hint{animation:hint 1.3s ease-in-out 2}
+@keyframes hint{0%,60%,100%{margin-bottom:0}30%{margin-bottom:10px}}
+@media (prefers-reduced-motion:reduce){.book{transition:none}.book.hint{animation:none}}
+.book-grip{flex:none;height:var(--peek);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  background:var(--tag);border-radius:16px 16px 0 0;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none;color:var(--tag-muted);font-size:.72rem;font-weight:700;letter-spacing:.12em}
+.book-grip::before{content:"";width:40px;height:4px;border-radius:2px;background:var(--tag-edge);flex:none;transition:width .2s}
+.book-grip .lbl{display:flex;align-items:center;gap:5px;line-height:1;transition:opacity .2s}
+.book-grip .lbl svg{width:10px;height:10px;transition:transform .34s}
+.book.open .book-grip .lbl{opacity:0}
+.book.open .book-grip::before{width:52px}
+.book-grip:focus{outline:none}
+.book-grip:focus-visible::before{background:var(--red)}
+.book:not(.open) .book-page{visibility:hidden}
+.book-page{
+  flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  padding:0 calc(18px + var(--sar)) calc(var(--sab) + 20px) calc(18px + var(--sal));
+}
+.book-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.book-head h2{margin:0;font-size:1.4rem;font-weight:900}
+.book-head .book-close{border:none;background:#7a2a22;color:#f3e6c8;border-radius:10px;padding:0 16px;min-height:44px;font-weight:700;font-size:1rem}
+.book .sub2{color:var(--tag-muted);font-size:.85rem;margin:0 0 14px}
+.flow{list-style:none;margin:0 0 18px;padding:0;counter-reset:s}
+.flow li{position:relative;font-size:1.05rem;padding:12px 14px 12px 46px;margin-bottom:8px;background:rgba(255,255,255,.45);border-radius:8px;line-height:1.6;counter-increment:s}
+.flow li::before{content:counter(s);position:absolute;left:10px;top:10px;width:24px;height:24px;border-radius:50%;background:var(--tag-ink);color:var(--tag);font:800 .95rem/24px var(--num);text-align:center}
+.flow .go{display:block;font-size:.9rem;color:var(--tag-muted)}
+.flow .go b{color:var(--tag-ink)}
+.book h3{font-size:1rem;margin:0 0 8px}
+.book table{width:100%;border-collapse:collapse;font-size:1rem;margin-bottom:16px}
+.book td{padding:7px 4px;border-bottom:1px dashed var(--tag-edge);vertical-align:top;line-height:1.5}
+.book td:first-child{white-space:nowrap;font-weight:700;padding-right:10px}
+.book .swatches{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.95rem}
+.book .swatches div{display:flex;align-items:center;gap:6px;padding:7px 8px;background:rgba(255,255,255,.45);border-radius:6px}
+.book .swatches i{width:14px;height:14px;border-radius:3px;flex:none}
+
+/* feedback */
+.fb{position:fixed;inset:0;background:rgba(15,18,12,.72);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.fb.show{display:flex}
+.sheet{background:var(--tag);color:var(--tag-ink);width:100%;max-width:600px;max-height:88vh;max-height:88dvh;overflow:auto;overscroll-behavior:contain;
+  border-radius:18px 18px 0 0;padding:20px calc(20px + var(--sar)) calc(16px + var(--sab)) calc(20px + var(--sal));animation:up .22s ease-out}
+.sheet .primary{position:sticky;bottom:0}
+.sheet .primary[disabled]{opacity:.6}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.verdict{font-size:1.5rem;font-weight:900;margin:0 0 6px}
+.verdict.ok{color:var(--green)} .verdict.bad{color:var(--red)}
+.ans{margin:0 0 10px;font-weight:700}
+.why{line-height:1.75;margin:0 0 10px}
+.proc{line-height:1.7;margin:0 0 16px;padding:10px 12px;background:rgba(0,0,0,.06);border-radius:8px;font-size:.92rem}
+.sheet .primary{background:var(--field);color:var(--ink-on-field)}
+
+/* result */
+.big{font-family:var(--num);font-weight:800;font-size:5rem;line-height:1;margin:22px 0 0}
+.sub{color:var(--muted-on-field);margin:4px 0 18px}
+.grade{background:var(--field-2);border-radius:10px;padding:14px 16px;line-height:1.7;margin-bottom:16px}
+.review h2{font-size:1.05rem;margin:4px 0 10px}
+.review .item{background:var(--tag);color:var(--tag-ink);border-radius:8px;padding:12px 14px;margin-bottom:10px;line-height:1.65}
+.review .item b{display:block}
+.review .item small{color:var(--tag-muted)}
+.row{display:flex;gap:10px}
+.ghost{background:var(--field);border:2px solid var(--tag);color:var(--ink-on-field);border-radius:12px;padding:14px;min-height:56px;font-weight:700;font-size:1rem;flex:1}
+.row .primary{flex:1;margin:0}
+
+/* 排行榜 */
+.lb{font-size:.95rem;margin-bottom:8px}
+.lb .r{display:grid;grid-template-columns:2.2em 1fr auto auto;gap:8px;align-items:baseline;padding:7px 4px;border-bottom:1px dashed rgba(128,128,128,.4)}
+.lb .r b{font-family:var(--num);font-size:1.15rem}
+.lb .r .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.lb .r .c{font-size:.8rem;opacity:.7}
+.lb .r .s{font-family:var(--num);font-weight:800;font-size:1.2rem;text-align:right;min-width:3em}
+.lb .r.me{background:rgba(226,178,28,.3);border-radius:6px}
+.lb .empty{opacity:.75;padding:10px 4px;line-height:1.6}
+.lb-form{display:flex;gap:8px;margin-bottom:8px}
+.lb-form input{flex:1;min-width:0;font:inherit;font-size:1rem;padding:0 12px;min-height:48px;border-radius:10px;border:2px solid var(--tag-edge);background:var(--tag);color:var(--tag-ink)}
+.lb-form .primary{width:auto;margin:0;min-height:48px;padding:0 18px;font-size:1rem;flex:none}
+.lb-form .primary[disabled]{opacity:.6}
+#lbTitle{color:var(--tag-ink)}
+.lb-more{display:block;width:100%;border:none;background:transparent;color:var(--muted-on-field);font-size:.9rem;font-weight:700;padding:6px 0;min-height:40px;text-align:right}
+[hidden]{display:none!important}
+
+/* 新手教學：一次只亮一個要按的地方，用手指圖示帶著做 */
+.tut-open{flex:none;width:100%;margin-bottom:16px}
+.tut-f{display:none;pointer-events:none}
+.tut-f path{fill:#fff;stroke:#2a2418;stroke-width:1.4;stroke-linejoin:round}
+.tut-skip,.tut-swipe{display:none}
+body.tut .book,body.tut .book-shade{display:none!important}
+body.tut .timer{visibility:hidden}
+body.tut .tut-skip{display:block;position:fixed;left:0;right:0;bottom:calc(var(--sab) + 3px);margin:0 auto;width:max-content;z-index:12;
+  border:none;background:transparent;color:var(--muted-on-field);font-size:.85rem;font-weight:700;padding:6px 18px;min-height:30px}
+body.tut .hs:not(.tut-on){opacity:.28}
+body.tut .shout:not(.tut-on){opacity:.35}
+body.tut .btns button:not(.tut-on){opacity:.28}
+body.tut .hs.tut-on .ring{stroke:#ffe066;stroke-width:4;stroke-dasharray:none;fill:rgba(255,224,102,.3);animation:tutRing 1s ease-in-out infinite alternate}
+body.tut .hs.tut-on .tut-f{display:block;animation:tutX .8s ease-in-out infinite alternate}
+body.tut .shout.tut-on,body.tut .scene-air.tut-on,body.tut .btns .tut-on{position:relative;z-index:5;animation:tutGlow .8s ease-in-out infinite alternate}
+body.tut .shout.tut-on{border-color:#ffe066;border-style:solid}
+body.tut .scene-air.tut-on{z-index:5;position:absolute}
+body.tut .shout.tut-on::after,body.tut .scene-air.tut-on::after{content:"";position:absolute;left:50%;top:62%;width:44px;height:44px;margin-left:-16px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 1.5a2 2 0 0 1 2 2V10l5.8 1.2a2.8 2.8 0 0 1 2.2 2.7V17a5.5 5.5 0 0 1-5.5 5.5h-1.6a5.5 5.5 0 0 1-4.5-2.3L4.2 15.6a1.7 1.7 0 0 1 2.6-2.1l.2.2V3.5a2 2 0 0 1 2-2z' fill='%23fff' stroke='%232a2418' stroke-width='1.4' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45));pointer-events:none;animation:tutY .8s ease-in-out infinite alternate}
+body.tut .scene-air.tut-on::after{top:90%}
+@keyframes tutRing{to{fill:rgba(255,224,102,.55)}}
+@keyframes tutGlow{from{box-shadow:0 0 0 0 rgba(255,224,102,.9)}to{box-shadow:0 0 0 7px rgba(255,224,102,.35)}}
+@keyframes tutX{to{transform:translateX(9px)}}
+@keyframes tutY{to{transform:translateY(9px)}}
+body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0;top:4.6em;bottom:0;z-index:2;pointer-events:none}
+.ts-chip{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;white-space:nowrap;
+  background:rgba(20,22,16,.82);color:#fff;border-radius:999px;padding:6px 14px;font-weight:700;font-size:.95rem}
+.ts-chip i{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.75);flex:none}
+/* 滑動示範：整張傷患卡被手指「拖」向分類方向再彈回，同時浮現顏色戳記；箭頭朝該方向流動 */
+.scene.tut-demo:not(.dragging){animation:tutNudge 2.2s cubic-bezier(.45,0,.3,1) infinite}
+@keyframes tutNudge{0%,16%,90%,100%{translate:0 0;rotate:0deg}52%,68%{translate:calc(var(--dx)*58px) calc(var(--dy)*46px);rotate:calc(var(--dx)*5deg)}}
+.ts-tint{position:absolute;inset:-4.6em 0 0 0;display:grid;place-items:center;background:var(--c);color:var(--ct);font-size:3rem;font-weight:900;opacity:0;animation:tutTint 2.2s ease-in-out infinite}
+@keyframes tutTint{0%,18%,88%,100%{opacity:0}52%,68%{opacity:.62}}
+.ts-arrows{position:absolute;left:50%;top:55%;width:0;height:0;rotate:var(--rot)}
+.ts-arrows i{position:absolute;top:-13px;width:26px;height:26px;border-top:8px solid #fff;border-right:8px solid #fff;border-radius:3px;transform:rotate(45deg);
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.6));opacity:.2;animation:tutChev 1.1s ease-in-out infinite}
+.ts-arrows i:nth-child(1){left:52px}.ts-arrows i:nth-child(2){left:80px;animation-delay:.16s}.ts-arrows i:nth-child(3){left:108px;animation-delay:.32s}
+@keyframes tutChev{0%,60%,100%{opacity:.2;translate:0 0}25%{opacity:1;translate:6px 0}}
+.ts-ripple{position:absolute;left:50%;top:55%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;border:3px solid #fff;opacity:0;animation:tutRipple 2.2s ease-out infinite}
+@keyframes tutRipple{0%,8%{opacity:0;scale:.3}14%{opacity:.9;scale:.5}34%,100%{opacity:0;scale:1.5}}
+.ts-hand{position:absolute;left:50%;top:55%;width:56px;height:56px;margin:-4px 0 0 -21px;transform-origin:21px 4px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 1.5a2 2 0 0 1 2 2V10l5.8 1.2a2.8 2.8 0 0 1 2.2 2.7V17a5.5 5.5 0 0 1-5.5 5.5h-1.6a5.5 5.5 0 0 1-4.5-2.3L4.2 15.6a1.7 1.7 0 0 1 2.6-2.1l.2.2V3.5a2 2 0 0 1 2-2z' fill='%23fff' stroke='%232a2418' stroke-width='1.4' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;filter:drop-shadow(0 4px 5px rgba(0,0,0,.5));animation:tutSwipe 2.2s cubic-bezier(.45,0,.3,1) infinite}
+@keyframes tutSwipe{0%{opacity:0;transform:translate(0,22px) scale(1.15)}9%{opacity:1;transform:translate(0,0) scale(1.15)}16%{opacity:1;transform:translate(0,0) scale(.9)}
+  52%,68%{opacity:1;transform:translate(calc(var(--dx)*30px),calc(var(--dy)*24px)) scale(.9)}
+  80%{opacity:0;transform:translate(calc(var(--dx)*30px),calc(var(--dy)*24px)) scale(1.15)}100%{opacity:0;transform:translate(0,22px) scale(1.15)}}
+#tutDone .verdict{text-align:center;margin:6px 0 18px}
+#tutDone .ghost{background:transparent;border-color:var(--tag-ink);color:var(--tag-ink)}
+@media (prefers-reduced-motion:reduce){body.tut .tut-on,body.tut .tut-on::after,body.tut .hs.tut-on .ring,body.tut .hs.tut-on .tut-f,.ts-hand,.ts-arrows i,.scene.tut-demo{animation:none!important}.ts-arrows i{opacity:1}.ts-tint,.ts-ripple{display:none}}
+
+/* 橫向提示：這款遊戲為直向設計 */
+.rotate{position:fixed;inset:0;z-index:50;background:var(--field);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:20px;font-weight:700;font-size:1.1rem}
+.rotate i{font-style:normal;font-size:3rem;display:block;animation:rot 1.6s ease-in-out infinite}
+@keyframes rot{0%,30%{transform:rotate(90deg)}70%,100%{transform:rotate(0)}}
+@media (orientation:landscape) and (max-height:500px) and (pointer:coarse){.rotate{display:flex}}
+</style>
+</head>
+<body>
+
+<section class="screen active" id="start">
+  <h1>
+    <span class="strip"><i style="background:var(--red)"></i><i style="background:var(--yellow)"></i><i style="background:var(--green)"></i><i style="background:var(--black)"></i></span>
+    檢傷分類<br>滑動救援
+  </h1>
+  <p class="lead">發生大量傷患事件，你是第一位到場的救護員。每局會從 50 位傷患中抽出 10 位，每位傷患你有 20 秒：親手檢查他的狀況，聽他怎麼回應，再決定該給哪一種顏色的檢傷卡。</p>
+
+  <button class="ghost tut-open" id="tutOpen">▶ 新手教學（跟著手指做一次）</button>
+
+  <div class="panel" id="lbHome" hidden>
+    <h2>🏆 排行榜</h2>
+    <div class="lb" id="lbHomeList"></div>
+    <button class="lb-more" id="lbOpen">看前 20 名 ›</button>
+  </div>
+
+  <div class="panel">
+    <h2>START 檢傷流程</h2>
+    <svg class="flowchart" viewBox="0 0 360 424" role="img" aria-label="START 檢傷流程圖：能自己走路為綠色；不能走則看呼吸，沒有呼吸就打開呼吸道，仍無呼吸為黑色、恢復呼吸為紅色；呼吸每分鐘超過 30 次為紅色；摸不到脈搏或回填超過 2 秒為紅色；無法聽從指令為紅色；以上都正常為黃色。"><defs><marker id="fcA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="fc-h"/></marker></defs><rect class="fc-box" x="8" y="8" width="150" height="36" rx="6"/><text class="fc-q" x="83" y="26">能自己走路？</text><path class="fc-a" d="M158 26H274" marker-end="url(#fcA)"/><text class="fc-l" x="216" y="20" text-anchor="middle">是</text><rect x="276" y="11" width="78" height="30" rx="6" fill="var(--green)" stroke="rgba(255,255,255,.45)"/><text class="fc-c" x="315" y="26">綠 輕傷</text><path class="fc-a" d="M83 44V72" marker-end="url(#fcA)"/><text class="fc-l" x="75" y="63" text-anchor="end">否</text><rect class="fc-box" x="8" y="74" width="150" height="36" rx="6"/><text class="fc-q" x="83" y="92">有呼吸？</text><path class="fc-a" d="M158 92H172V118" marker-end="url(#fcA)"/><text class="fc-l" x="180" y="86" text-anchor="middle">否</text><rect class="fc-box" x="112" y="120" width="120" height="50" rx="6"/><text class="fc-q" x="172" y="136">打開呼吸道後</text><text class="fc-q" x="172" y="154">有呼吸嗎？</text><path class="fc-a" d="M232 132H274" marker-end="url(#fcA)"/><text class="fc-l" x="248" y="126" text-anchor="middle">否</text><rect x="276" y="120" width="78" height="24" rx="6" fill="var(--black)" stroke="rgba(255,255,255,.45)"/><text class="fc-c" x="315" y="132">黑 無徵象</text><path class="fc-a" d="M232 158H274" marker-end="url(#fcA)"/><text class="fc-l" x="248" y="152" text-anchor="middle">是</text><rect x="276" y="146" width="78" height="24" rx="6" fill="var(--red)" stroke="rgba(255,255,255,.45)"/><text class="fc-c" x="315" y="158">紅 立即</text><path class="fc-a" d="M83 110V190" marker-end="url(#fcA)"/><text class="fc-l" x="75" y="155" text-anchor="end">是</text><rect class="fc-box" x="8" y="192" width="150" height="36" rx="6"/><text class="fc-q" x="83" y="210">呼吸 &gt; 30 次/分？</text><path class="fc-a" d="M158 210H274" marker-end="url(#fcA)"/><text class="fc-l" x="216" y="204" text-anchor="middle">是</text><rect x="276" y="195" width="78" height="30" rx="6" fill="var(--red)" stroke="rgba(255,255,255,.45)"/><text class="fc-c" x="315" y="210">紅 立即</text><path class="fc-a" d="M83 228V256" marker-end="url(#fcA)"/><text class="fc-l" x="75" y="247" text-anchor="end">否</text><rect class="fc-box" x="8" y="258" width="150" height="50" rx="6"/><text class="fc-q" x="83" y="274">摸得到脈搏且</text><text class="fc-q" x="83" y="292">回填 ≤ 2 秒？</text><path class="fc-a" d="M158 283H274" marker-end="url(#fcA)"/><text class="fc-l" x="216" y="277" text-anchor="middle">否</text><rect x="276" y="268" width="78" height="30" rx="6" fill="var(--red)" stroke="rgba(255,255,255,.45)"/><text class="fc-c" x="315" y="283">紅 立即</text><path class="fc-a" d="M83 308V336" marker-end="url(#fcA)"/><text class="fc-l" x="75" y="327" text-anchor="end">是</text><rect class="fc-box" x="8" y="338" width="150" height="36" rx="6"/><text class="fc-q" x="83" y="356">能聽從指令？</text><path class="fc-a" d="M158 356H274" marker-end="url(#fcA)"/><text class="fc-l" x="216" y="350" text-anchor="middle">否</text><rect x="276" y="341" width="78" height="30" rx="6" fill="var(--red)" stroke="rgba(255,255,255,.45)"/><text class="fc-c" x="315" y="356">紅 立即</text><path class="fc-a" d="M83 374V402H274" marker-end="url(#fcA)"/><text class="fc-l" x="75" y="393" text-anchor="end">是</text><rect x="276" y="387" width="78" height="30" rx="6" fill="var(--yellow)" stroke="rgba(255,255,255,.45)"/><text class="fc-c" x="315" y="402" fill="#2a2418">黃 延遲</text></svg>
+  </div>
+
+  <div class="legend">
+    <div><b style="color:var(--red)">→</b>右滑：紅色 立即處置</div>
+    <div><b style="color:var(--yellow)">↑</b>上滑：黃色 延遲處置</div>
+    <div><b style="color:var(--green)">←</b>左滑：綠色 輕傷</div>
+    <div><b style="color:#9a9a9a">↓</b>下滑：黑色 無生命徵象</div>
+  </div>
+
+  <p class="note">小技巧：檢查照 START 的順序做，一找到決定性的結果就可以分類，不需要全部檢查。內容依照 START 檢傷分類法編寫，報告前請對照課本確認。</p>
+  <div class="dock"><div class="row">
+    <button class="primary" id="go">開始檢傷</button>
+  </div></div>
+</section>
+
+<section class="screen" id="game">
+  <div class="hud">
+    <div><div class="k" id="progK">傷患</div><div class="v" id="prog">1/10</div></div>
+    <div style="text-align:center"><div class="k">剩餘秒數</div><div class="v" id="sec">20</div></div>
+    <div style="text-align:right"><div class="k">分數</div><div class="v" id="score">0</div></div>
+  </div>
+  <div class="timer"><i id="bar"></i></div>
+
+  <button class="shout" id="shout">📢 喊話：「能走的人請走過來！」</button>
+
+  <div class="scene" id="scene">
+    <div class="bubble" id="bubble"></div>
+    <div id="fig"></div>
+    <div class="name" id="who"></div>
+    <div class="stamp" id="stamp"></div>
+    <button class="scene-air" id="airway">打開呼吸道<small>壓額抬下巴</small></button>
+    <div class="tut-swipe" id="tutSwipe" hidden><div class="ts-chip" style="z-index:1"><span id="tsTip"></span><i id="tsDot"></i></div><div class="ts-tint" id="tsTint"></div><div class="ts-arrows"><i></i><i></i><i></i></div><div class="ts-ripple"></div><div class="ts-hand"></div></div>
+  </div>
+
+  <div class="log">
+    <h4 id="tagno">檢傷卡 NO. 001</h4>
+    <dl>
+      <dt>行走</dt><dd id="l-walk">—</dd>
+      <dt>呼吸</dt><dd id="l-breath">—</dd>
+      <dt>循環</dt><dd id="l-circ">—</dd>
+      <dt>意識</dt><dd id="l-mind">—</dd>
+    </dl>
+  </div>
+
+  <div class="btns">
+    <button class="b-green" data-c="green">← 綠<small>輕傷</small></button>
+    <button class="b-yellow" data-c="yellow">↑ 黃<small>延遲</small></button>
+    <button class="b-red" data-c="red">→ 紅<small>立即</small></button>
+    <button class="b-black" data-c="black">↓ 黑<small>無徵象</small></button>
+  </div>
+</section>
+
+<section class="screen" id="result">
+  <h1 style="margin-bottom:0">檢傷完成</h1>
+  <div class="big" id="final">0</div>
+  <p class="sub" id="acc"></p>
+  <div class="grade" id="grade"></div>
+  <div class="panel" id="lbSubmit" hidden>
+    <h2>🏆 登上排行榜</h2>
+    <form class="lb-form" id="lbForm">
+      <input id="lbName" maxlength="12" placeholder="輸入暱稱（最多 12 字）" aria-label="暱稱" autocomplete="nickname" enterkeyhint="send" required>
+      <button class="primary" id="lbSend" type="submit">送出</button>
+    </form>
+    <p class="note" id="lbMsg" role="status"></p>
+  </div>
+  <div class="panel" id="lbWrap" hidden>
+    <h2>排行榜 前 20 名</h2>
+    <div class="lb" id="lbResult"></div>
+  </div>
+  <div class="review" id="review"></div>
+  <div class="dock"><div class="row">
+    <button class="ghost" id="rules">看檢傷原則</button>
+    <button class="primary" id="again">再玩一次</button>
+  </div></div>
+</section>
+
+<button class="tut-skip" id="tutSkip">跳過教學 ›</button>
+<div class="book-shade" id="bookShade"></div>
+<aside class="book" id="book" aria-label="檢傷手冊">
+  <div class="book-grip" id="bookTab" role="button" tabindex="0" aria-expanded="false" aria-controls="bookPage" aria-label="檢傷手冊（上滑或點一下打開）"><span class="lbl"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 7 L5 3 L9 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>檢傷手冊</span></div>
+  <div class="book-page" id="bookPage">
+    <div class="book-head">
+      <h2>START 檢傷手冊</h2>
+      <button class="book-close" id="bookClose">關閉</button>
+    </div>
+    <p class="sub2">照順序往下判斷，一旦符合就停下來分類。計時不會暫停喔！</p>
+    <ol class="flow">
+      <li>能自己走路嗎？<span class="go">能 → <b>綠色</b>；不能 → 往下</span></li>
+      <li>有呼吸嗎？<span class="go">沒有 → 打開呼吸道：仍沒有 <b>黑色</b>，恢復呼吸 <b>紅色</b></span></li>
+      <li>呼吸每分鐘超過 30 次？<span class="go">是 → <b>紅色</b>；30 次以下 → 往下</span></li>
+      <li>循環正常嗎？<span class="go">回填超過 2 秒或摸不到手腕脈搏 → <b>紅色</b></span></li>
+      <li>能聽從簡單指令嗎？<span class="go">不能 → <b>紅色</b>；能 → <b>黃色</b></span></li>
+    </ol>
+    <h3>怎麼檢查</h3>
+    <table>
+      <tr><td>📢 喊話</td><td>「能走的人請走過來！」</td></tr>
+      <tr><td>點胸口</td><td>看起伏數 15 秒，再乘以 4</td></tr>
+      <tr><td>點手腕</td><td>兩指按在手腕拇指側摸脈搏</td></tr>
+      <tr><td>點指尖</td><td>壓指甲 5 秒放開，數幾秒恢復紅色</td></tr>
+      <tr><td>拍肩</td><td>「聽得到就握我的手」</td></tr>
+    </table>
+    <h3>分類顏色與滑動方向</h3>
+    <div class="swatches">
+      <div><i style="background:var(--red)"></i>→ 紅色 立即處置</div>
+      <div><i style="background:var(--yellow)"></i>↑ 黃色 延遲處置</div>
+      <div><i style="background:var(--green)"></i>← 綠色 輕傷</div>
+      <div><i style="background:var(--black)"></i>↓ 黑色 無生命徵象</div>
+    </div>
+  </div>
+</aside>
+
+<div class="fb" id="fb" role="dialog" aria-modal="true" aria-labelledby="verdict">
+  <div class="sheet">
+    <p class="verdict" id="verdict"></p>
+    <p class="ans" id="ans"></p>
+    <p class="why" id="why"></p>
+    <p class="proc" id="proc"></p>
+    <button class="primary" id="next">下一位傷患</button>
+  </div>
+</div>
+
+<div class="fb" id="lb" role="dialog" aria-modal="true" aria-labelledby="lbTitle">
+  <div class="sheet">
+    <p class="verdict" id="lbTitle">🏆 排行榜 前 20 名</p>
+    <div class="lb" id="lbList"></div>
+    <button class="primary" id="lbClose">關閉</button>
+  </div>
+</div>
+
+<div class="fb" id="tutDone" role="dialog" aria-modal="true" aria-labelledby="tutDoneT">
+  <div class="sheet">
+    <p class="verdict ok" id="tutDoneT">✓ 教學完成</p>
+    <div class="row">
+      <button class="ghost" id="tutAgain">再看一次</button>
+      <button class="primary" id="tutPlay">回到首頁</button>
+    </div>
+  </div>
+</div>
+
+<div class="rotate" aria-hidden="true"><i>📱</i>請將手機轉回直向<br><small style="font-weight:400;opacity:.8">這個遊戲是為直向手機設計的</small></div>
+
+<script>
+const COLORS={
+  red:{name:"紅色（立即處置）",short:"紅",hex:"var(--red)"},
+  yellow:{name:"黃色（延遲處置）",short:"黃",hex:"var(--yellow)"},
+  green:{name:"綠色（輕傷）",short:"綠",hex:"var(--green)"},
+  black:{name:"黑色（無生命徵象）",short:"黑",hex:"var(--black)"}
+};
+const SKIN=["#f0c9a4","#e8b98f","#d9a47a","#c68a5e"];
+/* 教學用的手指圖示（指尖朝上，指尖在 9,1.5） */
+const HAND="M9 1.5a2 2 0 0 1 2 2V10l5.8 1.2a2.8 2.8 0 0 1 2.2 2.7V17a5.5 5.5 0 0 1-5.5 5.5h-1.6a5.5 5.5 0 0 1-4.5-2.3L4.2 15.6a1.7 1.7 0 0 1 2.6-2.1l.2.2V3.5a2 2 0 0 1 2-2z";
+
+/* 每位傷患：外觀 + 各項檢查的真實狀況。正確答案由 START 規則自動算出。 */
+const CASES=[
+  {who:"小腿擦傷的上班族",walk:true,walkLine:"腳擦傷了好痛…不過我可以走。",
+   look:{shirt:"#4a6fa5",pants:"#2f3a4a",marks:[["scrape","legB"]]},
+   why:"START 第一步只看能不能走。能自己走過來，就先分到綠色，把人力留給走不動的人。"},
+  {who:"手腕扭傷的學生",walk:true,walkLine:"手腕超痛，但我走得動！",
+   look:{shirt:"#f2f2f2",pants:"#27408b",marks:[["swell","handT"]]},
+   why:"能走路就是綠色。扭傷之後可以再用三角巾固定。"},
+  {who:"一直哭的民眾",walk:true,walkLine:"嗚嗚…好可怕…（邊哭邊走過來）",
+   look:{shirt:"#b0567a",pants:"#3b3b3b",marks:[]},
+   why:"情緒激動不影響分類。能走動、沒有危及生命的狀況，屬於綠色。"},
+  {who:"額頭割傷的男子",walk:true,walkLine:"頭一直流血…但我還可以走。",
+   look:{shirt:"#6b8e4e",pants:"#4a3f35",marks:[["blood","head"]]},
+   why:"頭部血管多，流血看起來很嚇人，但他能自己走，所以是綠色，可以請他自己拿布加壓止血。"},
+  {who:"說胸口悶的阿伯",walk:true,walkLine:"胸口有點悶…我慢慢走過去。",
+   look:{shirt:"#8a8a80",pants:"#5a5040",marks:[],skin:1},
+   why:"初步檢傷仍然是能走 → 綠色。但檢傷不是一次就結束，綠色區的傷患要持續重新評估，狀況變差就要升級。"},
+  {who:"倒地的機車騎士",walk:false,walkLine:"（躺在地上喘）我…站不起來…",breath:36,
+   look:{shirt:"#222",pants:"#1f2a44",marks:[["scrape","torso"]]},
+   why:"呼吸每分鐘超過 30 次代表呼吸窘迫，直接分為紅色，不用再往下檢查。"},
+  {who:"被瓦礫壓住的婦人",walk:false,walkLine:"腳被壓住了…動不了…",breath:20,pulse:false,refill:4,pale:true,
+   look:{shirt:"#c9a24a",pants:"#555",marks:[["dust","legT"],["dust","legB"]]},
+   why:"呼吸正常，但循環出了問題：回填超過 2 秒、摸不到手腕脈搏，可能已經休克，分為紅色。"},
+  {who:"臉色蒼白的年輕人",walk:false,walkLine:"好冷…頭好暈…站不起來。",breath:24,pulse:false,refill:3,pale:true,
+   look:{shirt:"#3d7a78",pants:"#2a2a2a",marks:[["blood","belly"]]},
+   why:"摸不到手腕脈搏、回填也超過 2 秒，代表血壓可能很低，屬於紅色。"},
+  {who:"頭部撞擊的中年男子",walk:false,walkLine:"（眼睛半張，含糊地發出聲音）",breath:18,obey:false,
+   mindLine:"嗯…什麼…（眼神渙散，沒有握你的手）",
+   look:{shirt:"#7a4a3a",pants:"#333",marks:[["bruise","head"]],eyes:"half"},
+   why:"呼吸和循環都還可以，但無法聽從簡單指令，可能有腦部傷害，分為紅色。"},
+  {who:"大腿大量出血的傷者",walk:false,walkLine:"腿…血一直流…救我…",breath:28,pulse:false,refill:3,pale:true,
+   look:{shirt:"#e0e0e0",pants:"#3f4f6f",marks:[["pool","thighB"]]},
+   why:"循環不足（回填超過 2 秒）就是紅色。這類大出血傷患在檢傷時可以先快速上止血帶，再繼續評估下一位。"},
+  {who:"倒臥不動的傷者",walk:false,breath:0,airway:14,
+   look:{shirt:"#5b5f8a",pants:"#2d2d2d",marks:[],eyes:"closed"},
+   why:"打開呼吸道後恢復呼吸，代表呼吸道隨時可能再阻塞，要列為紅色立即處置。"},
+  {who:"小腿骨折的女學生",walk:false,walkLine:"腿…腿好像斷了！站不起來！",breath:20,refill:1.5,
+   look:{shirt:"#f5f5f5",pants:"#2c3e70",marks:[["deform","legB"]]},
+   why:"走不動，但呼吸、循環、意識都在正常範圍，屬於黃色：需要治療，但可以稍微等待。"},
+  {who:"背部燒燙傷的男子",walk:false,walkLine:"背好燙…好痛…起不來…",breath:22,refill:1.8,
+   look:{shirt:"#9b6b3a",pants:"#444",marks:[["burn","torso"]]},
+   why:"三項指標都沒超標，分為黃色。燒燙傷看起來嚴重，但檢傷只依照 START 標準判斷。"},
+  {who:"腹部疼痛的老先生",walk:false,walkLine:"肚子好痛…沒辦法站…",breath:24,
+   look:{shirt:"#a39b8b",pants:"#4d4336",marks:[["bruise","belly"]],skin:1},
+   why:"無法行走但生命徵象穩定，屬於黃色。之後要重新評估，因為腹部可能有內出血。"},
+  {who:"路旁發現的傷者",walk:false,breath:0,airway:0,pale:true,
+   look:{shirt:"#6e6e6e",pants:"#2a2a2a",marks:[["blood","head"]],eyes:"closed"},
+   why:"打開呼吸道後仍然沒有呼吸，在大量傷患時分為黑色。資源有限時，要優先救有機會存活的人。"}
+  /* ===== 以下為擴充題庫（共 50 題，每局抽 10 題） ===== */
+  /* 綠色 */
+  ,{who:"手掌燙傷的廚師",walk:true,walkLine:"手被熱油燙到了…我自己走過去。",
+   look:{shirt:"#f4f4f0",pants:"#2b2b2b",marks:[["swell","handT"]]},
+   why:"燙傷面積小，而且能自己走，就是綠色。之後可以請他自己沖水降溫。"}
+  ,{who:"滿身灰塵一直咳嗽的民眾",walk:true,walkLine:"咳、咳…到處都是灰…我可以走。",
+   look:{shirt:"#7d8a96",pants:"#3a3a3a",marks:[["dust","torso"]]},
+   why:"能走就先分到綠色。但如果他之後越咳越喘，就要重新評估、升級分類。"}
+  ,{who:"手臂骨折的工人",walk:true,walkLine:"手好像斷了…我用另一隻手扶著走過去。",
+   look:{shirt:"#d98a2b",pants:"#3d4a5c",marks:[["deform","handT"]]},
+   why:"上肢骨折看起來很嚴重，但他能自己走，依 START 第一步就是綠色。"}
+  ,{who:"大聲呼救的男子",walk:true,walkLine:"快來救我！我流好多血！（邊喊邊快步走過來）",
+   look:{shirt:"#a8443c",pants:"#2f2f38",marks:[["blood","torso"]]},
+   why:"叫得最大聲的不一定最嚴重。能喊、能走，代表呼吸、循環、意識暫時都還夠，屬於綠色。"}
+  ,{who:"耳鳴聽不清楚的女子",walk:true,walkLine:"什麼？我聽不太到…（看到你招手後自己走過來）",
+   look:{shirt:"#8c6fae",pants:"#40404a",marks:[]},
+   why:"爆炸後常有暫時聽不清楚的情況，所以喊話時要搭配手勢。她能自己走過來，分為綠色。"}
+  ,{who:"膝蓋撞傷的慢跑者",walk:true,walkLine:"膝蓋撞到了…一跛一跛的，還能走。",
+   look:{shirt:"#39a0a8",pants:"#22262e",marks:[["bruise","legT"]]},
+   why:"跛著走也算「能自己走」，分為綠色。"}
+  /* 黃色 */
+  ,{who:"腳踝腫脹的護理師",walk:false,walkLine:"腳踝腫得好大，一踩就痛…站不起來。",breath:18,refill:1.5,
+   look:{shirt:"#9fd0d6",pants:"#9fd0d6",marks:[["swell","legB"]]},
+   why:"走不動，但呼吸、循環、意識都正常，屬於黃色。"}
+  ,{who:"跌坐在地的老太太",walk:false,walkLine:"屁股這邊好痛…腿動不了…",breath:22,refill:1.8,
+   look:{shirt:"#b98fa6",pants:"#5b5560",marks:[["bruise","thighB"]]},
+   why:"無法行走，但三項指標都在正常範圍，分為黃色。年長者可能有髖部骨折，之後要再評估。"}
+  ,{who:"雙腿被壓過的工人",walk:false,walkLine:"兩條腿都沒力…站不起來。",breath:26,refill:1.5,
+   look:{shirt:"#e3c23a",pants:"#39424f",marks:[["dust","legT"],["deform","legB"]]},
+   why:"呼吸 26 次沒有超過 30、回填在 2 秒內、能聽從指令，所以是黃色。"}
+  ,{who:"不停尖叫的女子",walk:false,walkLine:"啊——！好痛！我的腿！（大聲尖叫）",breath:28,refill:1,
+   look:{shirt:"#d46a8c",pants:"#2e3440",marks:[["deform","legT"]]},
+   why:"疼痛和尖叫都不是 START 的分類標準。呼吸 28 次未超過 30，循環與意識正常，分為黃色。"}
+  ,{who:"背痛不敢動的駕駛",walk:false,walkLine:"背好痛…腳麻麻的，不敢動。",breath:16,refill:1,
+   look:{shirt:"#56708f",pants:"#3b3b3b",marks:[["bruise","torso"]]},
+   why:"可能有脊椎傷害，不要勉強他站起來。三項指標正常，分為黃色。"}
+  ,{who:"頭暈站不穩的孕婦",walk:false,walkLine:"頭好暈…一站起來就要倒下去。",breath:22,refill:1.5,
+   look:{shirt:"#e6b7a0",pants:"#5a4b52",marks:[]},
+   why:"無法行走，但呼吸、循環、意識正常，初步分為黃色，之後要優先重新評估。"}
+  ,{who:"大腿變形的機車騎士",walk:false,walkLine:"大腿…整個歪掉了…動不了…",breath:26,refill:1.8,
+   look:{shirt:"#30343c",pants:"#4a5a78",marks:[["deform","thighB"],["scrape","legB"]]},
+   why:"目前三項指標都沒有超標，分為黃色。大腿骨折可能內出血，要記得回頭重新評估循環。"}
+  ,{who:"臉部燒傷的男子",walk:false,walkLine:"臉好燙…眼睛睜不開…看不到路…",breath:24,refill:1.5,
+   look:{shirt:"#7b6a55",pants:"#3a3a3a",marks:[["burn","head"]],eyes:"closed"},
+   why:"看不到路所以無法自己走。三項指標正常，分為黃色；臉部燒傷可能讓呼吸道腫起來，要優先重新評估。"}
+  ,{who:"嚇到腿軟的學生",walk:false,walkLine:"（全身發抖）我…我腿軟…站不起來…",breath:28,refill:1,
+   look:{shirt:"#f0f0f0",pants:"#5a2d2d",marks:[]},
+   why:"沒有明顯外傷，但走不了就不能算綠色。照流程檢查後三項正常，分為黃色。"}
+  ,{who:"被碎玻璃割傷的店員",walk:false,walkLine:"到處都在流血…腳底有玻璃，沒辦法走。",breath:20,refill:1.5,
+   look:{shirt:"#4f8f6b",pants:"#2b2f3a",marks:[["blood","legB"],["blood","torso"],["scrape","handT"]]},
+   why:"傷口很多、看起來很可怕，但呼吸、循環、意識都正常，依標準是黃色。"}
+  /* 紅色：呼吸超過 30 次 */
+  ,{who:"胸口撞到方向盤的駕駛",walk:false,walkLine:"（大口喘）胸口…吸不到氣…",breath:40,
+   look:{shirt:"#6f7f99",pants:"#3a3a40",marks:[["bruise","torso"]]},
+   why:"呼吸每分鐘 40 次，超過 30 次就是紅色，不需要再往下檢查。"}
+  ,{who:"吸入濃煙的住戶",walk:false,walkLine:"（邊咳邊喘）喉嚨…好燒…",breath:34,
+   look:{shirt:"#bfa07a",pants:"#4a4a4a",marks:[["dust","torso"]]},
+   why:"呼吸 34 次已超過 30 次，代表呼吸窘迫，分為紅色。"}
+  ,{who:"看不出外傷的老太太",walk:false,walkLine:"我…沒事…只是…好喘…",breath:38,
+   look:{shirt:"#a7a0c0",pants:"#57505c",marks:[]},
+   why:"外表沒有傷口不代表沒事。呼吸 38 次超過 30 次，分為紅色。"}
+  ,{who:"肋骨劇痛的搬運工",walk:false,walkLine:"一吸氣就痛…（呼吸又淺又快）",breath:44,
+   look:{shirt:"#c0562f",pants:"#444a52",marks:[["bruise","belly"]]},
+   why:"呼吸又淺又快，每分鐘 44 次，遠超過 30 次，分為紅色。"}
+  /* 紅色：循環不足 */
+  ,{who:"腹部被刺傷的男子",walk:false,walkLine:"肚子…好冷…",breath:26,pulse:false,refill:4,pale:true,
+   look:{shirt:"#d9d4c7",pants:"#38404c",marks:[["blood","belly"]]},
+   why:"呼吸沒超過 30 次，但摸不到手腕脈搏、回填 4 秒，循環不足，分為紅色。"}
+  ,{who:"安靜不說話的老人",walk:false,walkLine:"（很小聲）我…好累…想睡…",breath:22,pulse:false,refill:3.5,pale:true,
+   look:{shirt:"#8f9488",pants:"#514a40",marks:[]},
+   why:"安靜的傷患往往比大叫的更危險。他摸不到脈搏、回填超過 2 秒，可能已經休克，分為紅色。"}
+  ,{who:"手臂大量出血的工人",walk:false,walkLine:"手…血止不住…頭好昏…",breath:28,pulse:false,refill:3,pale:true,
+   look:{shirt:"#e08a2e",pants:"#3d4654",marks:[["pool","handT"]]},
+   why:"回填超過 2 秒、摸不到脈搏就是紅色。可以先快速幫他上止血帶，再去評估下一位。"}
+  ,{who:"被車撞倒的行人",walk:false,walkLine:"下半身…動不了…好渴…",breath:24,pulse:false,refill:3,pale:true,
+   look:{shirt:"#5f86b3",pants:"#33363d",marks:[["bruise","thighB"],["deform","legT"]]},
+   why:"看不到大量出血，但臉色蒼白、摸不到脈搏、回填 3 秒，可能有骨盆內出血，分為紅色。"}
+  /* 紅色：無法聽從指令 */
+  ,{who:"胡言亂語的男子",walk:false,walkLine:"（雙手亂揮）走開…我要回家…",breath:20,obey:false,
+   mindLine:"你是誰…不要碰我…（沒有照你說的握手）",
+   look:{shirt:"#4c5d3f",pants:"#2e2e2e",marks:[["blood","head"]]},
+   why:"會說話不等於意識正常。他無法聽從簡單指令，可能有腦部傷害，分為紅色。"}
+  ,{who:"從瓦礫堆救出的女子",walk:false,walkLine:"（沒有回應，但胸口有起伏）",breath:14,obey:false,
+   mindLine:"（沒有任何反應，手是軟的）",
+   look:{shirt:"#b3a58c",pants:"#55504a",marks:[["dust","torso"],["dust","legT"]],eyes:"closed"},
+   why:"有呼吸、循環也正常，但完全無法聽從指令，分為紅色。"}
+  ,{who:"一直重複同一句話的老先生",walk:false,walkLine:"現在幾點…現在幾點…",breath:18,obey:false,
+   mindLine:"現在幾點…（看著你，但沒有握手）",
+   look:{shirt:"#9a8f7a",pants:"#48423a",marks:[["bruise","head"]]},
+   why:"眼睛睜著、會說話，卻無法照指令做動作，仍然算「無法聽從簡單指令」，分為紅色。"}
+  ,{who:"眼神呆滯的年輕人",walk:false,walkLine:"（眼睛半睜，沒有回答）",breath:24,obey:false,
+   mindLine:"（眼神呆滯，手沒有動）",
+   look:{shirt:"#2f6f8f",pants:"#2a2a30",marks:[],eyes:"half"},
+   why:"呼吸和循環都正常，要一直檢查到意識這一步才會發現問題：無法聽從指令，分為紅色。"}
+  /* 紅色：打開呼吸道後恢復呼吸 */
+  ,{who:"口鼻有血的傷者",walk:false,breath:0,airway:10,
+   look:{shirt:"#73655a",pants:"#333",marks:[["blood","head"]],eyes:"closed"},
+   why:"原本沒有呼吸，打開呼吸道後恢復，分為紅色。他的呼吸道需要有人持續維持。"}
+  ,{who:"被拖出車外的駕駛",walk:false,breath:0,airway:22,
+   look:{shirt:"#3f4f7a",pants:"#2b2b2b",marks:[["bruise","head"]],eyes:"closed"},
+   why:"只要是「打開呼吸道才恢復呼吸」，不管恢復後每分鐘幾次，都是紅色。"}
+  /* 黑色 */
+  ,{who:"胸口被重物壓住的傷者",walk:false,breath:0,airway:0,pale:true,
+   look:{shirt:"#7a7468",pants:"#3a3833",marks:[["dust","torso"]],eyes:"closed"},
+   why:"打開呼吸道後仍然沒有呼吸，在大量傷患現場分為黑色，不在此時做心肺復甦術。"}
+  ,{who:"頭部嚴重外傷的傷者",walk:false,breath:0,airway:0,pale:true,
+   look:{shirt:"#50607a",pants:"#2c2c2c",marks:[["pool","head"]],eyes:"closed"},
+   why:"沒有呼吸，打開呼吸道也沒有恢復，分為黑色。把時間留給還有機會救回來的人。"}
+  ,{who:"全身燒傷的傷者",walk:false,breath:0,airway:0,pale:true,
+   look:{shirt:"#4a3a30",pants:"#2a2420",marks:[["burn","torso"],["burn","legT"]],eyes:"closed"},
+   why:"不能只看外觀就判定，一樣要先看呼吸、打開呼吸道；確認仍無呼吸後才分為黑色。"}
+  ,{who:"像是睡著的老人",walk:false,breath:0,airway:0,pale:true,
+   look:{shirt:"#a8a294",pants:"#5a5348",marks:[],eyes:"closed"},
+   why:"沒有外傷、看起來像睡著，也要照流程檢查。打開呼吸道後仍無呼吸，分為黑色。"}
+  ,{who:"家屬在旁哭喊的傷者",walk:false,walkLine:"（旁邊的人大喊：快救他！他剛剛還在動！）",breath:0,airway:0,pale:true,
+   look:{shirt:"#8a5a5a",pants:"#35353d",marks:[["bruise","torso"]],eyes:"closed"},
+   why:"檢傷最困難的是壓力。即使家屬在旁邊哭喊，打開呼吸道後仍無呼吸，還是要分為黑色，繼續去救下一位。"}
+].map((c,i)=>Object.assign({breath:16,pulse:true,refill:1,obey:true,airway:0},c,{
+  look:Object.assign({skin:i%4},c.look)
+}));
+
+/* START 流程：回傳正確顏色 + 需要的檢查 */
+function start_(p){
+  const need=["walk"];
+  if(p.walk) return {a:"green",need};
+  need.push("breath");
+  if(p.breath===0){need.push("airway");return {a:p.airway>0?"red":"black",need}}
+  if(p.breath>30) return {a:"red",need};
+  need.push("circ");
+  if(!p.pulse||p.refill>2) return {a:"red",need};
+  need.push("mind");
+  if(!p.obey) return {a:"red",need};
+  return {a:"yellow",need};
+}
+/* 每局從題庫抽 10 題：各顏色固定比例，讓每局難度相近、排行榜才公平 */
+const DRAW={red:4,yellow:3,green:2,black:1};
+function drawDeck(){
+  const g={};CASES.forEach(c=>{const k=start_(c).a;(g[k]=g[k]||[]).push(c)});
+  let d=[];Object.keys(DRAW).forEach(k=>{d=d.concat(shuffle(g[k]||[]).slice(0,DRAW[k]))});
+  return shuffle(d);
+}
+const NEED_NAME={walk:"喊話看能否行走",breath:"看胸口數呼吸",airway:"打開呼吸道",circ:"摸脈搏或壓指甲",mind:"拍肩請他握手"};
+
+/* ---- 人形（俯視、平躺，頭在左） ---- */
+function mix(hex,to,t){const a=parseInt(hex.slice(1),16),b=parseInt(to.slice(1),16);
+  const r=(x,s)=>((x>>s)&255);const m=s=>Math.round(r(a,s)*(1-t)+r(b,s)*t);
+  return "#"+[16,8,0].map(s=>m(s).toString(16).padStart(2,"0")).join("")}
+const MARKPOS={head:[45,92],torso:[175,95],belly:[215,118],legT:[320,92],legB:[320,128],thighB:[270,128],handT:[226,48]};
+function mark([type,at]){
+  const [x,y]=MARKPOS[at];
+  switch(type){
+    case "blood":return `<path d="M${x-10} ${y-4} q6 -10 14 -3 q10 -2 6 9 q4 10 -8 8 q-10 6 -12 -4 q-8 -4 0 -10z" fill="#9e1b16" opacity=".9"/>`;
+    case "pool":return `<ellipse cx="${x}" cy="${y+22}" rx="34" ry="14" fill="#7d130f" opacity=".85"/><path d="M${x-12} ${y-6} q8 -8 18 0 q6 8 -4 12 q-12 4 -14 -12z" fill="#b01e18"/>`;
+    case "scrape":return `<g stroke="#b3443a" stroke-width="2" opacity=".85"><line x1="${x-12}" y1="${y-6}" x2="${x+10}" y2="${y-9}"/><line x1="${x-10}" y1="${y}" x2="${x+12}" y2="${y-3}"/><line x1="${x-8}" y1="${y+6}" x2="${x+9}" y2="${y+4}"/></g>`;
+    case "burn":return `<ellipse cx="${x}" cy="${y}" rx="30" ry="20" fill="#c2553a" opacity=".55"/><ellipse cx="${x+6}" cy="${y-2}" rx="14" ry="9" fill="#e9a07c" opacity=".7"/>`;
+    case "bruise":return `<ellipse cx="${x}" cy="${y}" rx="14" ry="10" fill="#5b3d7a" opacity=".55"/>`;
+    case "swell":return `<circle cx="${x}" cy="${y}" r="15" fill="#d9776a" opacity=".45"/>`;
+    case "dust":return `<g fill="#8f8574" opacity=".9"><circle cx="${x-10}" cy="${y-4}" r="6"/><circle cx="${x+4}" cy="${y+3}" r="8"/><circle cx="${x+16}" cy="${y-6}" r="5"/></g>`;
+    case "deform":return `<path d="M${x-14} ${y} l12 -9 l12 9" fill="none" stroke="#6b1f1a" stroke-width="3"/>`;
+  }
+  return "";
+}
+function figure(p){
+  const L=p.look; let skin=SKIN[L.skin]; if(p.pale) skin=mix(skin,"#dcd6cc",.6);
+  const hair=["#2b2118","#3a2a1e","#1a1a1a","#6b6b6b"][L.skin];
+  const eyes=L.eyes==="closed"?
+    `<path d="M60 96 q5 4 10 0 M60 122 q5 4 10 0" stroke="#3a2a1e" stroke-width="2" fill="none"/>`:
+    L.eyes==="half"?`<path d="M60 97 h10 M60 123 h10" stroke="#3a2a1e" stroke-width="3"/>`:
+    `<circle cx="66" cy="97" r="3" fill="#2a2418"/><circle cx="66" cy="123" r="3" fill="#2a2418"/>`;
+  const rate=p.breath; const anim=rate>0?`style="animation:breathe ${(60/rate).toFixed(2)}s ease-in-out infinite"`:"";
+  /* 手指比滑鼠粗：每個檢查點都有一圈看不見、較大的點擊範圍 */
+  const hs=(id,x,y,r,label,px,py)=>`<g class="hs" data-act="${id}" tabindex="0" role="button" aria-label="${label}">
+    <circle class="hit" cx="${x}" cy="${y}" r="${Math.max(r,28)}"/>
+    <circle class="ring" cx="${x}" cy="${y}" r="${r}"/>
+    <rect class="hit" x="${px-40}" y="${py-18}" width="80" height="36"/>
+    <rect class="pill" x="${px-35}" y="${py-14}" width="70" height="28" rx="14"/>
+    <text class="pill-t" x="${px}" y="${py}">${label}</text>
+    <g class="tut-f"><g transform="translate(${x+r*.45},${y}) rotate(-90) scale(1.8) translate(-9,-1.5)"><path d="${HAND}"/></g></g></g>`;
+  return `<svg viewBox="0 -2 420 226" preserveAspectRatio="xMidYMid meet" role="img" aria-label="傷患平躺在地上">
+  <style>@keyframes breathe{50%{transform:scale(1.07,1.12)}}</style>
+  <ellipse cx="215" cy="190" rx="190" ry="14" fill="rgba(0,0,0,.18)"/>
+  ${L.marks.filter(m=>m[0]==="pool").map(mark).join("")}
+  <rect x="240" y="80" width="150" height="28" rx="12" fill="${L.pants}"/>
+  <rect x="240" y="114" width="150" height="28" rx="12" fill="${L.pants}"/>
+  <rect x="380" y="76" width="22" height="34" rx="8" fill="#2a2320"/>
+  <rect x="380" y="112" width="22" height="34" rx="8" fill="#2a2320"/>
+  <rect x="112" y="37" width="110" height="22" rx="10" fill="${skin}"/>
+  <rect x="112" y="37" width="46" height="22" rx="10" fill="${L.shirt}"/>
+  <rect x="112" y="163" width="110" height="22" rx="10" fill="${skin}"/>
+  <rect x="112" y="163" width="46" height="22" rx="10" fill="${L.shirt}"/>
+  <circle cx="228" cy="48" r="11" fill="${skin}"/><circle cx="228" cy="174" r="11" fill="${skin}"/>
+  <rect x="88" y="100" width="22" height="22" fill="${skin}"/>
+  <g class="chest" id="chest" ${anim}><rect x="100" y="58" width="150" height="106" rx="26" fill="${L.shirt}"/>
+  <path d="M110 111 h130" stroke="rgba(0,0,0,.12)" stroke-width="2"/></g>
+  <circle cx="45" cy="111" r="36" fill="${hair}"/>
+  <circle cx="56" cy="111" r="32" fill="${skin}"/>
+  ${eyes}<path d="M84 104 q3 7 0 14" stroke="#7a4a3a" stroke-width="2.5" fill="none"/>
+  ${L.marks.filter(m=>m[0]!=="pool").map(mark).join("")}
+  ${hs("pulse",212,174,20,"摸手腕",212,208)}
+  ${hs("refill",234,48,18,"壓指尖",234,16)}
+  ${hs("mind",56,111,40,"拍肩",56,166)}
+  ${hs("breath",165,111,34,"看胸口",155,152)}
+  </svg>`;
+}
+
+/* ---- 遊戲狀態 ---- */
+const $=id=>document.getElementById(id);
+const LIMIT=20;
+let deck=[],idx=0,score=0,right=0,mistakes=[],t=0,timer=null,locked=false,done=new Set(),cur=null;
+let tut=null; /* 教學進行中：{pi:第幾位, si:第幾步, play:結束後是否直接開始} */
+
+/* 手機震動回饋（Android 支援；iPhone 會自動忽略） */
+function buzz(p){try{if(navigator.vibrate)navigator.vibrate(p)}catch(_){}}
+/* 遊戲中讓螢幕保持亮著 */
+let wake=null;
+async function keepAwake(on){
+  try{
+    if(on&&!wake&&"wakeLock" in navigator){wake=await navigator.wakeLock.request("screen");wake.addEventListener("release",()=>wake=null)}
+    else if(!on&&wake){await wake.release();wake=null}
+  }catch(_){}
+}
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));window.scrollTo(0,0);
+  document.body.classList.toggle("playing",id==="game");if(id!=="game")book(false);keepAwake(id==="game");
+  if(id==="start"&&LB_ON)lbLoad($("lbHomeList"),LB_HOME)}
+function book(open){
+  $("book").classList.toggle("open",open);$("bookShade").classList.toggle("open",open);
+  $("bookTab").setAttribute("aria-expanded",open);
+  $("book").style.transform="";
+  if(open)$("bookClose").focus({preventScroll:true});
+}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function say(me,them){$("bubble").innerHTML=(me?`<div class="me">你：${me}</div>`:"")+(them||"")}
+
+let hinted=false;
+function startGame(){if(!hinted){hinted=true;setTimeout(()=>$("book").classList.add("hint"),900)}deck=drawDeck();idx=0;score=0;right=0;mistakes=[];$("score").textContent=0;show("game");deal()}
+
+function deal(){
+  cur=tut?TUT[tut.pi].c:deck[idx];locked=false;done=new Set();
+  const no=tut?tut.pi:idx;
+  $("prog").textContent=`${no+1}/${tut?TUT.length:deck.length}`;
+  $("tagno").textContent="檢傷卡 NO. "+String(no+1).padStart(3,"0");
+  $("who").textContent=cur.who;
+  $("fig").innerHTML=figure(cur);
+  ["walk","breath","circ","mind"].forEach(k=>$("l-"+k).textContent="—");
+  $("airway").classList.remove("show");
+  $("shout").classList.remove("done");
+  say("",tut?"":idx===0?'<span style="color:#777">先<b>點身體</b>檢查，決定好就<b>把傷患往分類方向拖</b>，或按下方按鈕。</span>':'<span style="color:#777">現場很混亂，先從哪裡開始檢查？</span>');
+  const sc=$("scene");sc.classList.add("dragging");sc.style.transform="";$("stamp").style.opacity=0;
+  sc.classList.remove("enter");void sc.offsetWidth;sc.classList.add("enter");sc.classList.remove("dragging");
+  t=LIMIT;lastSec=LIMIT;tick();
+  if(tut){clearInterval(timer);$("sec").textContent="∞";tutStep();return} /* 教學不計時 */
+  runTimer();
+}
+/* 用實際經過時間計時：切到背景（來電、通知）時自動暫停，回來再繼續 */
+let lastTs=0,lastSec=LIMIT;
+function runTimer(){
+  clearInterval(timer);lastTs=performance.now();
+  timer=setInterval(()=>{
+    const now=performance.now();t-=(now-lastTs)/1000;lastTs=now;tick();
+    if(t<=0)answer(null);
+  },100);
+}
+function tick(){
+  $("bar").style.transform=`scaleX(${Math.max(t,0)/LIMIT})`;
+  $("bar").classList.toggle("low",t<6);
+  const s=Math.ceil(Math.max(t,0));
+  $("sec").textContent=s;$("sec").classList.toggle("warn",t<6&&t>0);
+  if(s!==lastSec){lastSec=s;if(s<=5&&s>0)buzz(15)}
+}
+document.addEventListener("visibilitychange",()=>{
+  if(!$("game").classList.contains("active"))return;
+  if(document.hidden)clearInterval(timer);
+  else{keepAwake(true);if(!locked&&!tut)runTimer()}
+});
+function markChecked(act){const g=document.querySelector(`.hs[data-act="${act}"]`);if(g)g.classList.add("checked")}
+
+function act(a){
+  if(locked)return; const p=cur;
+  if(tut&&a!==tutWant())return; /* 教學中只接受目前指示的那一步 */
+  buzz(8);
+  const before={};["walk","breath","circ","mind"].forEach(k=>before[k]=$("l-"+k).textContent);
+  act_(a,p);
+  ["walk","breath","circ","mind"].forEach(k=>{const d=$("l-"+k);if(d.textContent!==before[k]){d.classList.remove("new");void d.offsetWidth;d.classList.add("new")}});
+  if(tut){tut.si++;tutStep()}
+}
+function act_(a,p){
+  if(a==="walk"){
+    done.add("walk");$("shout").classList.add("done");
+    if(p.walk){say("能走的人請走過來！",p.walkLine);$("l-walk").textContent="可以自己走過來"}
+    else{say("能走的人請走過來！",p.walkLine||"（沒有任何反應）");$("l-walk").textContent="無法行走"}
+  }
+  if(a==="breath"){
+    done.add("breath");markChecked("breath");
+    const r=done.has("airway")?p.airway:p.breath;
+    if(r===0){say("（看胸口起伏，聽呼吸聲…）","胸口完全沒有起伏，也聽不到呼吸聲。");$("l-breath").textContent="沒有呼吸";$("airway").classList.add("show")}
+    else{say("（看胸口起伏，數 15 秒再乘以 4…）",`呼吸大約每分鐘 <b>${r}</b> 次。`);$("l-breath").textContent=`${r} 次/分`}
+  }
+  if(a==="airway"){
+    done.add("airway");$("airway").classList.remove("show");
+    if(p.airway>0){
+      say("（一手壓額頭，一手抬下巴，打開呼吸道）",`咳…！胸口開始起伏了，每分鐘約 <b>${p.airway}</b> 次。`);
+      $("l-breath").textContent=`開呼吸道後恢復，${p.airway} 次/分`;
+      $("chest").style.animation=`breathe ${(60/p.airway).toFixed(2)}s ease-in-out infinite`;
+    }else{
+      say("（一手壓額頭，一手抬下巴，打開呼吸道）","等了幾秒，胸口仍然沒有任何起伏。");
+      $("l-breath").textContent="開呼吸道後仍無呼吸";
+    }
+  }
+  if(a==="pulse"){
+    done.add("circ");markChecked("pulse");
+    const txt=p.breath===0&&!(p.airway>0)?"摸不到任何脈搏。":p.pulse?"摸得到，跳動清楚。":"手腕冰冷，摸不到脈搏。";
+    say("（兩指按在手腕拇指側…）",txt);
+    addCirc(p.pulse&&!(p.breath===0&&!p.airway)?"脈搏：摸得到":"脈搏：摸不到");
+  }
+  if(a==="refill"){
+    done.add("circ");markChecked("refill");
+    const s=p.breath===0&&!p.airway?"沒有恢復":`${p.refill} 秒`;
+    say("（按壓指甲 5 秒後放開…）",s==="沒有恢復"?"指甲一直是白的，沒有恢復紅色。":`指甲大約 <b>${p.refill}</b> 秒後恢復紅色。`);
+    addCirc(`回填：${s}`);
+  }
+  if(a==="mind"){
+    done.add("mind");markChecked("mind");
+    const line=p.breath===0?"（完全沒有反應）":p.obey?(p.mindLine||"（用力握住你的手）聽…聽得到。"):p.mindLine;
+    say("聽得到嗎？聽得到就握我的手！",line);
+    $("l-mind").textContent=p.breath===0?"沒有反應":p.obey?"能聽從指令":"無法聽從指令";
+  }
+}
+function addCirc(s){const d=$("l-circ");const cur_=d.textContent==="—"?[]:d.textContent.split("｜");if(!cur_.some(x=>x.split("：")[0]===s.split("：")[0]))cur_.push(s);d.textContent=cur_.join("｜")}
+
+function answer(choice){
+  if(locked)return;if(tut){tutAnswer(choice);return}
+  locked=true;book(false);clearInterval(timer);
+  const {a,need}=start_(cur),ok=choice===a;
+  const missed=need.filter(n=>!done.has(n));
+  const extra=[...done].filter(n=>!need.includes(n)).length;
+  if(choice)flyOut(choice);
+  buzz(ok?[20,40,20]:[80,50,80]);
+  let pts=0,proc="";
+  if(ok){
+    pts=100+Math.round(Math.max(t,0)*5);
+    if(missed.length){pts=Math.round(pts/2);proc=`答對了，但你沒有做「${missed.map(m=>NEED_NAME[m]).join("、")}」就分類，這次算是猜中的，分數減半。`}
+    else if(extra){proc=`檢查完整！不過有 ${extra} 項檢查其實不需要做，找到決定性的結果就可以直接分類，省下的時間能救下一位。`}
+    else proc="檢查順序完美，沒有多做任何一步。";
+    score+=pts;right++;$("score").textContent=score;
+  }else{
+    mistakes.push({c:cur,choice,a});
+    proc=`正確流程：${need.map(m=>NEED_NAME[m]).join(" → ")}。`+(missed.length?`你漏掉了「${missed.map(m=>NEED_NAME[m]).join("、")}」。`:"");
+  }
+  setTimeout(()=>{
+    const v=$("verdict");v.className="verdict "+(ok?"ok":"bad");
+    v.textContent=ok?`判斷正確 +${pts}`:(choice?"判斷錯誤":"時間到了");
+    $("ans").innerHTML=`正確分類：<span class="dot" style="background:${COLORS[a].hex}"></span>${COLORS[a].name}`+(!ok&&choice?`　你選了：${COLORS[choice].short}`:"");
+    $("why").textContent=cur.why;$("proc").textContent=proc;
+    $("next").textContent=idx===deck.length-1?"看結果":"下一位傷患";
+    $("fb").classList.add("show");$("fb").querySelector(".sheet").scrollTop=0;
+    /* 防止滑動後手指還沒離開就誤觸「下一位」 */
+    const n=$("next");n.disabled=true;setTimeout(()=>{n.disabled=false;n.focus({preventScroll:true})},450);
+  },choice?260:0);
+}
+function next(){if($("next").disabled)return;$("fb").classList.remove("show");idx++;if(idx<deck.length)deal();else finish()}
+
+function finish(){
+  show("result");
+  $("final").textContent=score;
+  $("acc").textContent=`正確 ${right} / ${deck.length} 位`;
+  const p=right/deck.length;
+  $("grade").textContent=p===1?"全部正確！你已經能在壓力下依照 START 原則快速分類。":
+    p>=.8?"表現很好，檢傷觀念大致正確，看看下面錯的題目。":
+    p>=.5?"及格了，但有些關鍵步驟還不熟，建議再看一次檢傷原則。":"檢傷的順序還不太熟，先看一次 START 原則再挑戰。";
+  $("review").innerHTML=mistakes.length?"<h2>需要複習的傷患</h2>"+mistakes.map(({c,choice,a})=>
+    `<div class="item"><b>${c.who}</b><small>你選：${choice?COLORS[choice].short:"未作答"}　正確：${COLORS[a].short}</small><br>${c.why}</div>`).join(""):"";
+  lbAfterGame();
+}
+
+/* ---- 排行榜（Supabase）----
+   只放「公開」的 publishable / anon key；千萬不要把 service_role key 放進網頁。
+   兩個欄位留空的話，遊戲照常可玩，只是不顯示排行榜。 */
+const SUPABASE_URL="https://hhsfehaozltfewmfjdho.supabase.co";
+const SUPABASE_KEY="sb_publishable_Vaw-s5RPSU2rc5179kkJuw_p3T8nQ8W";
+const LB_ON=!!(SUPABASE_URL&&SUPABASE_KEY),LB_TOP=20,LB_HOME=5;
+let sent=false,myName="";
+function lbFetch(path,opt){
+  opt=opt||{};
+  return fetch(SUPABASE_URL+"/rest/v1/"+path,Object.assign({},opt,{headers:Object.assign(
+    {apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"},opt.headers)}))
+    .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r});
+}
+function lbNote(el,txt){el.textContent="";const d=document.createElement("div");d.className="empty";d.textContent=txt;el.appendChild(d)}
+async function lbLoad(el,n){
+  lbNote(el,"讀取中…");
+  try{
+    const rows=await(await lbFetch("triage_leaderboard?select=name,score,correct&order=score.desc,created_at.asc&limit="+(n||LB_TOP))).json();
+    if(!rows.length){lbNote(el,"還沒有人上榜，快來當第一名！");return}
+    el.textContent="";
+    rows.forEach((r,i)=>{
+      const row=document.createElement("div");row.className="r"+(myName&&r.name===myName?" me":"");
+      [["b",i+1],["span",r.name,"n"],["span","答對 "+r.correct,"c"],["span",r.score,"s"]].forEach(([tag,txt,cls])=>{
+        const e=document.createElement(tag);if(cls)e.className=cls;e.textContent=txt;row.appendChild(e)});
+      el.appendChild(row);
+    });
+  }catch(_){lbNote(el,"排行榜暫時讀取不到，請稍後再試。")}
+}
+function lbAfterGame(){
+  if(!LB_ON)return;
+  sent=false;$("lbSubmit").hidden=false;$("lbWrap").hidden=false;
+  $("lbSend").disabled=false;$("lbMsg").textContent="同一個暱稱只會保留最高分。";
+  if(!$("lbName").value){try{$("lbName").value=localStorage.getItem("triageName")||""}catch(_){}}
+  lbLoad($("lbResult"));
+}
+if(LB_ON){
+  /* 首頁直接顯示前 5 名，回到首頁時重新讀取 */
+  $("lbHome").hidden=false;lbLoad($("lbHomeList"),LB_HOME);
+  $("lbOpen").onclick=()=>{$("lb").classList.add("show");lbLoad($("lbList"))};
+  $("lbClose").onclick=()=>$("lb").classList.remove("show");
+  $("lb").addEventListener("click",e=>{if(e.target===$("lb"))$("lb").classList.remove("show")});
+  $("lbForm").addEventListener("submit",async e=>{
+    e.preventDefault();if(sent)return;
+    const name=Array.from($("lbName").value.trim().replace(/\s+/g," ")).slice(0,12).join("");
+    if(!name)return;
+    $("lbSend").disabled=true;$("lbMsg").textContent="送出中…";
+    try{
+      await lbFetch("triage_scores",{method:"POST",headers:{Prefer:"return=minimal"},
+        body:JSON.stringify({name:name,score:score,correct:right})});
+      sent=true;myName=name;try{localStorage.setItem("triageName",name)}catch(_){}
+      $("lbMsg").textContent="已送出！你的成績："+score+" 分";
+      lbLoad($("lbResult"));
+    }catch(_){$("lbSend").disabled=false;$("lbMsg").textContent="送出失敗，請檢查網路後再試一次。"}
+  });
+}else{
+  $("lbForm").addEventListener("submit",e=>e.preventDefault());
+}
+
+function flyOut(c){const d={red:[1,0],green:[-1,0],yellow:[0,-1],black:[0,1]}[c];
+  $("scene").style.transform=`translate(${d[0]*650}px,${d[1]*700}px) rotate(${d[0]*20}deg)`}
+
+/* ---- 點擊 vs 拖曳 ---- */
+const scene=$("scene"),stamp=$("stamp");
+let sx=0,sy=0,st=0,down=false,moved=false,target=null,pid=null,lastDir=null;
+/* 拖超過螢幕寬約 22%（至少 70px）就算分類；快速甩一下也算 */
+function dirOf(dx,dy,flick){const need=flick?40:Math.max(70,Math.min(110,scene.clientWidth*.22));
+  if(Math.max(Math.abs(dx),Math.abs(dy))<need)return null;
+  return Math.abs(dx)>Math.abs(dy)?(dx>0?"red":"green"):(dy>0?"black":"yellow")}
+scene.addEventListener("pointerdown",e=>{
+  if(locked||e.target.closest(".scene-air"))return;
+  down=true;moved=false;lastDir=null;sx=e.clientX;sy=e.clientY;st=performance.now();pid=e.pointerId;
+  const h=e.target.closest(".hs");target=h?h.dataset.act:null;
+  if(h)h.classList.add("tap");
+});
+scene.addEventListener("pointermove",e=>{
+  if(!down)return;const dx=e.clientX-sx,dy=e.clientY-sy;
+  if(!moved&&Math.hypot(dx,dy)>12){moved=true;scene.classList.add("dragging");clearTap();try{scene.setPointerCapture(pid)}catch(_){}}
+  if(!moved)return;
+  scene.style.transform=`translate(${dx}px,${dy}px) rotate(${dx/22}deg)`;
+  const d=dirOf(dx,dy);
+  if(d!==lastDir){lastDir=d;if(d)buzz(12)}
+  if(d){stamp.style.background=COLORS[d].hex;stamp.style.color=d==="yellow"?"#2a2418":"#fff";stamp.textContent=COLORS[d].short;stamp.style.opacity=.85}
+  else stamp.style.opacity=0;
+});
+function clearTap(){document.querySelectorAll(".hs.tap").forEach(h=>h.classList.remove("tap"))}
+function up(e){
+  if(!down)return;down=false;scene.classList.remove("dragging");clearTap();
+  if(!moved){if(target)act(target);return}
+  const dx=e.clientX-sx,dy=e.clientY-sy,v=Math.hypot(dx,dy)/Math.max(1,performance.now()-st);
+  const d=dirOf(dx,dy)||(v>.6?dirOf(dx,dy,true):null);
+  if(d)answer(d);else{scene.style.transform="";stamp.style.opacity=0}
+}
+scene.addEventListener("pointerup",up);
+scene.addEventListener("pointercancel",()=>{clearTap();if(down){down=false;scene.classList.remove("dragging");scene.style.transform="";stamp.style.opacity=0}});
+scene.addEventListener("keydown",e=>{const h=e.target.closest&&e.target.closest(".hs");if(h&&(e.key==="Enter"||e.key===" ")){e.preventDefault();act(h.dataset.act)}});
+
+$("shout").onclick=()=>act("walk");
+$("airway").onclick=()=>act("airway");
+document.querySelectorAll(".btns button").forEach(b=>b.addEventListener("click",()=>answer(b.dataset.c)));
+document.addEventListener("keydown",e=>{
+  if($("book").classList.contains("open")){if(e.key==="Escape")book(false);return}
+  if((e.key==="h"||e.key==="H")&&!tut&&$("game").classList.contains("active")){book(true);return}
+  if($("fb").classList.contains("show")){if(e.key==="Enter"||e.key===" "){e.preventDefault();next()}return}
+  if(!$("game").classList.contains("active")||locked)return;
+  const m={ArrowRight:"red",ArrowLeft:"green",ArrowUp:"yellow",ArrowDown:"black"}[e.key];
+  if(m){e.preventDefault();answer(m)}
+});
+$("bookShade").onclick=()=>book(false);$("bookClose").onclick=()=>book(false);
+$("bookTab").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();book(!$("book").classList.contains("open"))}});
+/* 手冊把手：點一下切換；往上拉打開、往下拉關閉，拖曳時跟著手指 */
+(()=>{const g=$("bookTab"),b=$("book");let y0=null,base=0,dy=0;
+  g.addEventListener("pointerdown",e=>{if(locked&&!b.classList.contains("open"))return;
+    y0=e.clientY;dy=0;
+    base=b.classList.contains("open")?0:b.getBoundingClientRect().top-(innerHeight-b.offsetHeight);
+    g.setPointerCapture(e.pointerId);b.style.transition="none";b.classList.remove("hint")});
+  g.addEventListener("pointermove",e=>{if(y0===null)return;dy=e.clientY-y0;
+    b.style.transform=`translateY(${Math.min(Math.max(0,base+dy),b.offsetHeight)}px)`;
+    $("bookShade").style.opacity=Math.max(0,Math.min(1,1-(base+dy)/b.offsetHeight))});
+  const end=()=>{if(y0===null)return;y0=null;b.style.transition="";b.style.transform="";$("bookShade").style.opacity="";
+    const open=b.classList.contains("open");
+    if(Math.abs(dy)<8)book(!open);else if(!open&&dy<-40)book(true);else if(open&&dy>60)book(false);else book(open)};
+  g.addEventListener("pointerup",end);g.addEventListener("pointercancel",end);
+})();
+
+/* ---- 新手教學 ----
+   四位固定的練習傷患，剛好走過四種顏色與所有檢查動作。不計時、不計分。
+   每一步只亮一個目標並放上手指圖示；其他操作一律不接受。 */
+const TUT_BASE={breath:16,pulse:true,refill:1,obey:true,airway:0,why:""};
+const TUT=[
+  {tip:"能走",steps:["walk"],
+   c:{who:"練習 1",walk:true,walkLine:"我可以走。",look:{skin:0,shirt:"#4a6fa5",pants:"#2f3a4a",marks:[["scrape","legB"]]}}},
+  {tip:"呼吸超過 30 次",steps:["walk","breath"],
+   c:{who:"練習 2",walk:false,walkLine:"（喘得說不出話）",breath:36,look:{skin:1,shirt:"#b0567a",pants:"#3b3b3b",marks:[["blood","torso"]]}}},
+  {tip:"開呼吸道仍沒呼吸",steps:["walk","breath","airway"],
+   c:{who:"練習 3",walk:false,walkLine:"（沒有任何反應）",breath:0,airway:0,pale:true,look:{skin:2,shirt:"#8a8a80",pants:"#5a5040",marks:[],eyes:"closed"}}},
+  {tip:"檢查都正常",steps:["walk","breath","pulse","mind"],
+   c:{who:"練習 4",walk:false,walkLine:"我的腿…站不起來。",breath:20,look:{skin:3,shirt:"#6b8e4e",pants:"#4a3f35",marks:[["deform","legT"]]}}}
+];
+TUT.forEach(x=>x.c=Object.assign({},TUT_BASE,x.c));
+const TUT_DIR={red:[1,0,"0deg"],green:[-1,0,"180deg"],yellow:[0,-1,"-90deg"],black:[0,1,"90deg"]};
+function tutSeen(){try{return localStorage.getItem("triageTut")==="1"}catch(_){return false}}
+function tutWant(){return TUT[tut.pi].steps[tut.si]||"swipe"}
+function tutClear(){document.querySelectorAll(".tut-on").forEach(e=>e.classList.remove("tut-on"));$("tutSwipe").hidden=true;$("scene").classList.remove("tut-demo")}
+function tutStart(play){
+  tut={pi:0,si:0,play:!!play};document.body.classList.add("tut");$("tutDone").classList.remove("show");
+  $("progK").textContent="教學";$("score").textContent="—";show("game");deal();
+}
+function tutStep(){
+  tutClear();const w=tutWant();
+  if(w==="swipe"){
+    const c=start_(cur).a,d=TUT_DIR[c],sw=$("tutSwipe"),sc=$("scene");
+    /* 變數設在整張卡上：卡片、手指、箭頭共用同一個方向 */
+    sc.style.setProperty("--dx",d[0]);sc.style.setProperty("--dy",d[1]);sc.style.setProperty("--rot",d[2]);
+    sc.style.setProperty("--c",COLORS[c].hex);sc.style.setProperty("--ct",c==="yellow"?"#2a2418":"#fff");
+    $("tsTip").textContent=TUT[tut.pi].tip;$("tsDot").style.background=COLORS[c].hex;$("tsTint").textContent=COLORS[c].short;
+    sw.hidden=false;sc.classList.remove("enter");sc.classList.add("tut-demo");document.querySelector(`.btns [data-c="${c}"]`).classList.add("tut-on");
+  }else (w==="walk"?$("shout"):w==="airway"?$("airway"):document.querySelector(`.hs[data-act="${w}"]`)).classList.add("tut-on");
+}
+function tutAnswer(choice){
+  /* 還沒檢查完、或方向不對：彈回原位，讓指示繼續帶 */
+  if(tutWant()!=="swipe"||choice!==start_(cur).a){scene.style.transform="";stamp.style.opacity=0;buzz(40);return}
+  locked=true;tutClear();flyOut(choice);buzz([20,40,20]);
+  const me=tut;
+  setTimeout(()=>{
+    if(tut!==me)return;
+    tut.pi++;tut.si=0;
+    if(tut.pi<TUT.length)deal();else{tutExit();$("tutDone").classList.add("show");$("tutPlay").focus({preventScroll:true})}
+  },520);
+}
+function tutExit(){
+  tut=null;tutClear();document.body.classList.remove("tut");$("progK").textContent="傷患";
+  try{localStorage.setItem("triageTut","1")}catch(_){}
+}
+$("tutOpen").onclick=()=>tutStart(false);
+$("tutAgain").onclick=()=>tutStart(true);
+$("tutPlay").onclick=()=>{$("tutDone").classList.remove("show");show("start")};
+$("tutSkip").onclick=()=>{const play=tut&&tut.play;tutExit();if(play)startGame();else show("start")};
+/* 第一次按「開始檢傷」先帶一次教學，之後直接開始 */
+$("go").onclick=()=>tutSeen()?startGame():tutStart(true);$("again").onclick=startGame;$("next").onclick=next;
+$("rules").onclick=()=>show("start");
+</script>
+</body>
+</html>

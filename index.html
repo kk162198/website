@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6f6f3" media="(prefers-color-scheme:light)">
+<meta name="theme-color" content="#131417" media="(prefers-color-scheme:dark)">
+<title>學校專案網站</title>
+<meta name="description" content="學校課程專案作品集。目前收錄：檢傷分類：滑動救援（全民國防教育 START 檢傷法小遊戲）。">
+<link rel="canonical" href="https://kk162198.github.io/website/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="學校專案網站">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:title" content="學校專案網站">
+<meta property="og:description" content="學校課程專案作品集。目前收錄：檢傷分類：滑動救援（全民國防教育 START 檢傷法小遊戲）。">
+<meta property="og:url" content="https://kk162198.github.io/website/">
+<meta property="og:image" content="https://kk162198.github.io/website/%E5%9C%8B%E9%98%B2%E9%81%8A%E6%88%B2/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="檢傷分類：滑動救援，綠黃紅黑四種檢傷卡">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+/* 總首頁：中性、乾淨的作品集風格，刻意不沿用任何一個遊戲的配色 */
+:root{--bg:#f6f6f3;--surface:#fff;--ink:#1d1f23;--muted:#666b73;--line:#e3e3de;--accent:#2f5bd8;--chip:#eef1f8;--chip-ink:#2b468f;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,"Segoe UI",sans-serif}
+@media (prefers-color-scheme:dark){:root{--bg:#131417;--surface:#1c1e22;--ink:#eceef1;--muted:#9aa0a9;--line:#2c2f35;--accent:#8aa7ff;--chip:#252b3b;--chip-ink:#b9c8f5}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;font-family:var(--sans);color:var(--ink);background:var(--bg);-webkit-text-size-adjust:100%}
+header,main,footer{width:100%;max-width:960px;margin:0 auto;padding-left:calc(env(safe-area-inset-left,0px) + 20px);padding-right:calc(env(safe-area-inset-right,0px) + 20px)}
+header{padding-top:calc(env(safe-area-inset-top,0px) + 56px);padding-bottom:28px}
+.kicker{font-size:.8rem;font-weight:700;letter-spacing:.16em;color:var(--accent);margin:0 0 10px}
+h1{font-size:clamp(2rem,7vw,2.9rem);font-weight:800;letter-spacing:-.01em;line-height:1.2;margin:0 0 12px}
+.lead{color:var(--muted);line-height:1.8;margin:0;max-width:34em}
+main{flex:1;padding-bottom:40px}
+h2{font-size:1rem;font-weight:700;margin:0 0 14px;padding-top:22px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline}
+h2 small{font-weight:500;color:var(--muted);font-size:.85rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+.card{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;color:inherit;text-decoration:none;
+  transition:transform .15s,box-shadow .15s,border-color .15s}
+@media (hover:hover){.card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(0,0,0,.1);border-color:var(--accent)}}
+.card:active{transform:scale(.985)}
+.card:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.card img{display:block;width:100%;height:auto;aspect-ratio:1200/630;object-fit:cover;background:var(--line)}
+.card .body{display:flex;flex-direction:column;flex:1;padding:16px 18px 18px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chips span{font-size:.75rem;font-weight:700;background:var(--chip);color:var(--chip-ink);border-radius:999px;padding:3px 10px}
+.card h3{margin:0 0 6px;font-size:1.15rem;font-weight:800}
+.card p{margin:0 0 14px;color:var(--muted);line-height:1.7;font-size:.93rem}
+.card .go{margin-top:auto;color:var(--accent);font-weight:700;font-size:.95rem}
+footer{padding-top:18px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 24px);border-top:1px solid var(--line);color:var(--muted);font-size:.82rem}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <p class="kicker">SCHOOL PROJECTS</p>
+  <h1>學校專案網站</h1>
+  <p class="lead">這裡收錄我在學校課程中製作的專案，點卡片就能直接開啟。</p>
+</header>
+<main>
+  <h2>專案 <small>共 1 個</small></h2>
+  <div class="grid">
+    <!-- 新增專案：複製下面整個 <a class="card">…</a>，改連結、圖片與文字，並更新上面的「共 N 個」 -->
+    <a class="card" href="國防遊戲/">
+      <img src="國防遊戲/og.png" alt="" width="1200" height="630">
+      <div class="body">
+        <div class="chips"><span>全民國防教育</span><span>小遊戲</span></div>
+        <h3>檢傷分類：滑動救援</h3>
+        <p>大量傷患現場，用 START 檢傷法在 20 秒內判斷每位傷患，分到綠、黃、紅、黑四種檢傷卡。</p>
+        <span class="go">開始遊戲 →</span>
+      </div>
+    </a>
+  </div>
+</main>
+<footer>© 2026 kk162198</footer>
+</body>
+</html>
