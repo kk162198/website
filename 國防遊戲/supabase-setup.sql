@@ -106,6 +106,66 @@ grant execute on function public.triage_award_set(text, integer, jsonb) to anon,
 -- 忘記頒獎密碼、或想把領獎頁恢復成「尚未揭曉」時執行（之後第一次輸入的密碼會成為新密碼）：
 --   update public.triage_award set pass_hash = null, revealed = 0, winners = null;
 
+-- 5. 場次：每頒完一次獎（或在 stats.html 按「封存目前場次」）就新增一列。
+--    成績本身不記場次，而是用時間切：上一場結束之後、到這一場 ended_at 為止送出的成績，都算這一場；
+--    最後一場結束之後的成績是「目前場次」。所以刪掉某一列，它的成績就自動併入下一場。
+create table if not exists public.triage_batch (
+  id       bigint generated always as identity primary key,
+  name     text        not null check (char_length(name) between 1 and 30),  -- 場次名稱，例如班級
+  ended_at timestamptz not null default now(),
+  winners  jsonb                                                              -- 頒獎當時的得獎名單（沒頒獎就封存則為 null）
+);
+create index if not exists triage_batch_ended_idx on public.triage_batch (ended_at);
+create index if not exists triage_scores_created_idx on public.triage_scores (created_at);
+
+alter table public.triage_batch enable row level security;
+drop policy if exists "triage_batch_read" on public.triage_batch;
+create policy "triage_batch_read" on public.triage_batch for select to anon, authenticated using (true);
+revoke all on public.triage_batch from anon, authenticated;
+grant select on public.triage_batch to anon, authenticated;   -- 只能讀；新增／改名／刪除要走下面的函式
+
+-- 5a. 檢查頒獎密碼（資料庫裡還沒有密碼時，第一次輸入的就成為正式密碼）。只給下面的函式內部使用。
+create or replace function public.triage_pass_check(p_pass text)
+returns void language plpgsql security definer set search_path = public as $$
+declare
+  h text := encode(sha256(convert_to(coalesce(p_pass, ''), 'UTF8')), 'hex');
+  old text;
+begin
+  if char_length(coalesce(p_pass, '')) < 4 then raise exception 'short_pass'; end if;
+  insert into public.triage_award (id) values (1) on conflict (id) do nothing;
+  select pass_hash into old from public.triage_award where id = 1 for update;
+  if old is null then update public.triage_award set pass_hash = h where id = 1;
+  elsif old <> h then raise exception 'bad_pass';
+  end if;
+end;
+$$;
+revoke all on function public.triage_pass_check(text) from public, anon, authenticated;
+
+-- 5b. 場次管理：p_action = 'close'（封存目前場次）／'rename'／'delete'
+create or replace function public.triage_batch_do(p_pass text, p_action text, p_id bigint default null, p_name text default null, p_winners jsonb default null)
+returns json language plpgsql security definer set search_path = public as $$
+declare
+  n text := left(btrim(coalesce(p_name, '')), 30);
+  new_id bigint := p_id;
+begin
+  perform public.triage_pass_check(p_pass);
+  if p_action = 'close' then
+    if n = '' then raise exception 'bad_name'; end if;
+    insert into public.triage_batch (name, winners) values (n, p_winners) returning id into new_id;
+  elsif p_action = 'rename' then
+    if n = '' then raise exception 'bad_name'; end if;
+    update public.triage_batch set name = n where id = p_id;
+  elsif p_action = 'delete' then
+    delete from public.triage_batch where id = p_id;
+  else
+    raise exception 'bad_action';
+  end if;
+  return json_build_object('ok', true, 'id', new_id);
+end;
+$$;
+revoke all on function public.triage_batch_do(text, text, bigint, text, jsonb) from public;
+grant execute on function public.triage_batch_do(text, text, bigint, text, jsonb) to anon, authenticated;
+
 -- 讓 API 立刻認得新欄位與新函式
 notify pgrst, 'reload schema';
 

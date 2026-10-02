@@ -100,10 +100,6 @@ h1{margin:0;font-size:clamp(2rem,5vw,3.2rem);font-weight:900;line-height:1.15;le
 .got[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
 .sync{display:inline-block;vertical-align:middle;margin-left:10px;font-size:.8rem;font-weight:700;letter-spacing:0;border-radius:999px;padding:3px 10px;background:rgba(255,255,255,.12);color:var(--muted)}
 .sync:empty{display:none}.sync.ok{background:var(--green);color:#fff}.sync.err{background:var(--red);color:#fff}
-.pass{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;max-width:420px;width:100%;margin:0 auto}
-.pass h3{margin:0;font-size:1.5rem}.pass p{margin:0;color:var(--muted);line-height:1.7}
-.pass input{width:100%;font:inherit;font-size:1.2rem;text-align:center;min-height:54px;border-radius:12px;border:2px solid var(--tag-edge);background:var(--tag);color:var(--tag-ink);padding:0 14px}
-.cer.asking .pass{display:flex}.cer.asking .stage,.cer.asking .cer-bot{display:none}
 .cer-bot{text-align:center;padding-top:8px}
 .cer-bot .cta{font-size:1.25rem;min-height:60px;padding:0 34px}
 .cer-bot p{margin:14px auto 0;color:var(--muted);line-height:1.7;max-width:46em;font-size:clamp(.9rem,1.5vw,1.1rem)}
@@ -111,6 +107,48 @@ h1{margin:0;font-size:clamp(2rem,5vw,3.2rem);font-weight:900;line-height:1.15;le
 .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:11}
 .confetti i{position:absolute;top:-20px;width:10px;height:16px;border-radius:2px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+
+/* 場次切換 */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:-8px 0 16px}
+.tabs[hidden]{display:none}
+.tab{background:var(--field-2);border:2px solid transparent;color:var(--muted);border-radius:999px;font-size:.95rem;font-weight:700;padding:0 16px;min-height:40px;max-width:16em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--tag);color:var(--tag-ink)}
+.card.wide{margin-top:14px}
+.wins{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;padding-bottom:6px}
+.win{display:flex;align-items:baseline;gap:10px;background:var(--field);border-radius:8px;padding:8px 12px;min-width:0}
+.win b{font-family:var(--num);font-size:1.4rem;color:var(--yellow)}
+.win .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.win .s{font-family:var(--num);font-weight:800;font-size:1.2rem;font-variant-numeric:tabular-nums}
+/* 各場次比較 */
+.tbl-wrap{overflow-x:auto}
+.cmp{width:100%;border-collapse:collapse;font-size:1rem;min-width:720px}
+.cmp th,.cmp td{padding:10px 10px;text-align:left;border-bottom:1px solid rgba(255,255,255,.12);white-space:nowrap}
+.cmp tr:first-child th{font-size:.85rem;font-weight:500;color:var(--muted);border-bottom-color:rgba(255,255,255,.25)}
+.cmp .num{text-align:right;font-family:var(--num);font-size:1.15rem;font-variant-numeric:tabular-nums}
+.cmp tr:first-child .num{font-family:var(--sans);font-size:.85rem}
+.cmp tr.on{background:rgba(255,255,255,.06)}
+.pick{background:none;border:none;color:var(--ink);font:inherit;font-weight:700;padding:0;text-decoration:underline;text-decoration-color:rgba(255,255,255,.35);text-underline-offset:4px;max-width:14em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.accbar{display:inline-block;vertical-align:middle;width:90px;height:8px;border-radius:4px;background:rgba(255,255,255,.12);margin-right:10px;overflow:hidden}
+.accbar i{display:block;height:100%;background:var(--tag);border-radius:4px}
+.acc span:last-child{display:inline-block;min-width:2.6em}
+.cmp .act{text-align:right}
+.cmp .act .mini{min-height:34px;padding:0 10px;font-size:.8rem;margin-left:6px}
+.cmp-act{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:12px;color:var(--muted);font-size:.9rem}
+.mini[disabled]{opacity:.4;cursor:default}
+.arch{margin:14px auto 0!important;color:var(--ink)!important}
+.arch .mini{min-height:34px;margin-left:8px;font-size:.8rem}
+/* 對話框 */
+.dlg{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);padding:20px}
+.dlg.show{display:flex}
+.dlg form{width:100%;max-width:440px;background:var(--field-2);border-radius:16px;padding:22px 20px 18px;display:flex;flex-direction:column;gap:8px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.dlg h3{margin:0;font-size:1.3rem}
+.dlg p{margin:0;color:var(--muted);line-height:1.7;font-size:.95rem}
+.dlg label{font-size:.9rem;font-weight:700;margin-top:6px}
+.dlg input{width:100%;font:inherit;font-size:1.1rem;min-height:50px;border-radius:10px;border:2px solid var(--tag-edge);background:var(--tag);color:var(--tag-ink);padding:0 12px}
+.dlg .err{color:#ffb4ae;min-height:1.2em}
+.dlg-row{display:flex;justify-content:flex-end;gap:10px;margin-top:6px}
+.dlg-row .cta{min-height:46px;font-size:1rem;box-shadow:none}
+[hidden]{display:none!important}
 
 @media (max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.kpi:first-child{grid-column:1/-1}.charts{grid-template-columns:1fr}.bars{height:190px}}
 @media (max-width:640px){
@@ -138,6 +176,8 @@ h1{margin:0;font-size:clamp(2rem,5vw,3.2rem);font-weight:900;line-height:1.15;le
     </div>
   </div>
 
+  <div class="tabs" id="tabs" role="tablist" aria-label="選擇場次" hidden></div>
+
   <div class="kpis">
     <div class="kpi"><div class="k">遊玩次數</div><div class="v" id="kPlays">–</div></div>
     <div class="kpi"><div class="k">參與人數</div><div class="v" id="kPeople">–</div></div>
@@ -159,6 +199,19 @@ h1{margin:0;font-size:clamp(2rem,5vw,3.2rem);font-weight:900;line-height:1.15;le
     </div>
   </div>
 
+  <div class="card wide" id="winCard" hidden>
+    <h2>這一場的得獎名單</h2>
+    <p class="sub">頒獎當時固定下來的前幾名</p>
+    <div class="wins" id="wins"></div>
+  </div>
+
+  <div class="card wide" id="cmpCard" hidden>
+    <h2>各場次比較</h2>
+    <p class="sub">每頒完一次獎，那一場的成績就會自動封存成一列，下一場從零開始。</p>
+    <div class="tbl-wrap"><table class="cmp" id="cmp"></table></div>
+    <div class="cmp-act"><button class="mini" id="archNow">封存目前場次…</button><span id="cmpMsg" role="status"></span></div>
+  </div>
+
   <div class="foot">
     <span id="note">每 10 秒自動更新。參與人數以暱稱計算。</span>
     <a class="link" href="./">← 回到遊戲</a>
@@ -171,35 +224,93 @@ h1{margin:0;font-size:clamp(2rem,5vw,3.2rem);font-weight:900;line-height:1.15;le
     <h2 id="cerTitle">🏆 頒獎典禮 <span class="sync" id="sync"></span></h2>
     <div><button class="mini" id="cerReset">重新開始</button><button class="mini" id="cerClose">回到統計</button></div>
   </div>
-  <form class="pass" id="passForm" autocomplete="off">
-    <h3 id="passTitle">輸入頒獎密碼</h3>
-    <p id="passMsg"></p>
-    <input id="passIn" type="password" minlength="4" maxlength="40" aria-labelledby="passTitle" required>
-    <button class="cta" type="submit">確定</button>
-  </form>
   <div class="stage" id="stage"></div>
   <div class="cer-bot">
     <button class="cta" id="cerNext">揭曉</button>
+    <p class="arch" id="arch" hidden><span id="archTxt"></span> <button class="mini" id="archUndo">取消封存</button></p>
     <p id="cerHint">揭曉後，得獎的同學請拿出<b>玩遊戲的那支手機</b>，打開遊戲首頁，點「完美救護員」名單下方的「<b>🎁 領獎</b>」，得獎畫面會自動出現，拿給我看就能領禮物。</p>
   </div>
 </div>
 <div class="confetti" id="confetti" aria-hidden="true"></div>
+
+<!-- 共用對話框：場次名稱／頒獎密碼／確認 -->
+<div class="dlg" id="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+  <form id="dlgForm" autocomplete="off">
+    <h3 id="dlgTitle"></h3>
+    <p id="dlgMsg"></p>
+    <label id="dlgNameL" for="dlgName"></label>
+    <input id="dlgName" maxlength="30">
+    <label id="dlgPassL" for="dlgPass"></label>
+    <input id="dlgPass" type="password" maxlength="40">
+    <p class="err" id="dlgErr" role="alert"></p>
+    <div class="dlg-row"><button type="button" class="mini" id="dlgNo">取消</button><button class="cta" type="submit" id="dlgOk">確定</button></div>
+  </form>
+</div>
 
 <script>
 "use strict";
 /* 與遊戲 index.html 相同的 Supabase 設定（公開的 publishable key） */
 const SUPABASE_URL="https://hhsfehaozltfewmfjdho.supabase.co";
 const SUPABASE_KEY="sb_publishable_Vaw-s5RPSU2rc5179kkJuw_p3T8nQ8W";
-const REFRESH=10000, MAX_ROWS=1000, WINNERS=5, FULL=10000, QN=10;
+const REFRESH=10000, PAGE=1000, WINNERS=5, FULL=10000, QN=10;
 const $=id=>document.getElementById(id);
 const fmt=n=>Math.round(n).toLocaleString("en-US");
-function api(path,headers){
-  return fetch(SUPABASE_URL+"/rest/v1/"+path,{headers:Object.assign({apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY},headers)})
-    .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r});
+const HEAD={apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY};
+function api(path){
+  return fetch(SUPABASE_URL+"/rest/v1/"+path,{headers:HEAD})
+    .then(r=>{if(!r.ok){const e=new Error("HTTP "+r.status);e.status=r.status;throw e}return r.json()});
+}
+function rpc(fn,body){
+  return fetch(SUPABASE_URL+"/rest/v1/rpc/"+fn,{method:"POST",headers:Object.assign({"Content-Type":"application/json"},HEAD),body:JSON.stringify(body||{})})
+    .then(async r=>{
+      if(!r.ok){let m="";try{m=(await r.json()).message||""}catch(_){}const e=new Error(m||"HTTP "+r.status);e.status=r.status;throw e}
+      return r.json()});
 }
 function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
 
-/* ---- 統計 ---- */
+/* ---- 資料 ----
+   all：全部成績（依 id 遞增，每次只抓比上次新的）。batches：已封存的場次（依結束時間遞增）。
+   場次不另外存在成績上，而是用時間切：第 k 場＝上一場結束之後、到這一場 ended_at 為止送出的成績；
+   最後一場結束之後的都算「目前場次」。所以刪掉一個場次，它的成績就自動併入下一場。 */
+let all=[],lastId=0,batches=[],hasClaim=true,hasBatch=true,sel="cur";
+async function fetchScores(){
+  for(let i=0;i<50;i++){
+    let rows;
+    const q=c=>"triage_scores?select=id,name,score,correct,created_at"+(c?",claim":"")+"&order=id.asc&limit="+PAGE+"&id=gt."+lastId;
+    try{rows=await api(q(hasClaim))}
+    catch(e){if(!hasClaim||e.status!==400)throw e;hasClaim=false;rows=await api(q(false))}
+    rows.forEach(r=>{r.t=Date.parse(r.created_at);all.push(r)});
+    if(rows.length)lastId=rows[rows.length-1].id;
+    if(rows.length<PAGE)break;
+  }
+}
+async function fetchBatches(){
+  if(!hasBatch)return;
+  try{
+    const b=await api("triage_batch?select=id,name,ended_at,winners&order=ended_at.asc");
+    b.forEach(x=>{x.t=Date.parse(x.ended_at)});batches=b;
+  }catch(e){if(e.status===404){hasBatch=false;batches=[]}else throw e}
+}
+function rowsFor(s){
+  if(s==="all")return all;
+  const i=s==="cur"?batches.length:batches.findIndex(b=>b.id===s);
+  if(i<0)return[];
+  const lo=i>0?batches[i-1].t:-Infinity,hi=i<batches.length?batches[i].t:Infinity;
+  return all.filter(r=>r.t>lo&&r.t<=hi);
+}
+function summary(rows){
+  const n=rows.length;if(!n)return{n:0,people:0};
+  return{n:n,people:new Set(rows.map(r=>r.name)).size,avg:rows.reduce((s,r)=>s+r.score,0)/n,
+    max:Math.max(...rows.map(r=>r.score)),acc:rows.reduce((s,r)=>s+r.correct,0)/(n*QN),full:rows.filter(r=>r.correct===QN).length/n};
+}
+/* 這一場的排行榜：同一個暱稱只留最高分（同分取較早），再依分數排序 */
+function topOf(rows,n){
+  const best=new Map();
+  rows.forEach(r=>{const b=best.get(r.name);if(!b||r.score>b.score||(r.score===b.score&&r.id<b.id))best.set(r.name,r)});
+  return Array.from(best.values()).sort((a,b)=>b.score-a.score||a.id-b.id).slice(0,n);
+}
+
+/* ---- 統計畫面 ---- */
 const last={};
 function setNum(id,txt,unit){
   const e=$(id);if(last[id]===txt)return;
@@ -210,7 +321,7 @@ function setNum(id,txt,unit){
 /* 長條圖：單一數列，所以只用一個顏色；每根長條上方標數量，滑過／聚焦時顯示細節 */
 function chart(host,bins,axis){
   const total=bins.reduce((s,b)=>s+b.n,0),max=Math.max(1,...bins.map(b=>b.n));
-  if(!host.firstChild||host.dataset.n!=bins.length){
+  if(!host.querySelector(".bars")||host.dataset.n!=bins.length){
     host.textContent="";host.dataset.n=bins.length;
     const bars=el("div","bars"),xs=el("div","xs");
     bins.forEach(b=>{
@@ -229,56 +340,157 @@ function chart(host,bins,axis){
     bar.setAttribute("aria-label",b.label+"："+b.n+" 局");
   });
 }
-function render(rows,total){
-  if(!rows.length){
-    ["kPlays","kPeople","kAvg","kMax","kAcc"].forEach(id=>setNum(id,id==="kPlays"||id==="kPeople"?"0":"–"));
-    ["chScore","chRight"].forEach(id=>{$(id).textContent="";$(id).appendChild(el("div","empty","還沒有人玩過。有人送出成績後，這裡會自動出現。"))});
-    return;
-  }
-  const n=rows.length,sum=rows.reduce((s,r)=>s+r.score,0),ok=rows.reduce((s,r)=>s+r.correct,0);
-  setNum("kPlays",fmt(total));
-  setNum("kPeople",fmt(new Set(rows.map(r=>r.name)).size));
-  setNum("kAvg",fmt(sum/n));
-  setNum("kMax",fmt(Math.max(...rows.map(r=>r.score))));
-  setNum("kAcc",String(Math.round(ok/(n*QN)*100)),"%");
-  const sb=Array.from({length:10},(_,i)=>({n:0,x:i+"k",label:fmt(i*1000)+"–"+fmt(i===9?FULL:i*1000+999)+" 分"}));
-  rows.forEach(r=>sb[Math.min(9,Math.max(0,Math.floor(r.score/1000)))].n++);
-  chart($("chScore"),sb,"得分（k＝千分；最右邊含滿分 10,000）");
-  const rb=Array.from({length:QN+1},(_,i)=>({n:0,x:String(i),label:"答對 "+i+" 位"}));
-  rows.forEach(r=>rb[Math.min(QN,Math.max(0,r.correct))].n++);
-  chart($("chRight"),rb,"答對的傷患數");
-  const full=rows.filter(r=>r.correct===QN).length;
-  $("subRight").textContent="每一局 10 位傷患中答對幾位 · 全部答對 "+full+" 局（"+Math.round(full/n*100)+"%）";
-  $("note").textContent="每 10 秒自動更新。參與人數以暱稱計算。"+(total>n?"圖表與平均值依最近 "+fmt(n)+" 局計算。":"");
+const dateOf=t=>{const d=new Date(t);return(d.getMonth()+1)+"/"+d.getDate()};
+let tabSig="";
+function drawTabs(){
+  const tabs=$("tabs");tabs.hidden=!batches.length;
+  if(sel!=="cur"&&sel!=="all"&&!batches.some(b=>b.id===sel))sel="cur";
+  const sig=sel+"|"+batches.map(b=>b.id+":"+b.name).join(",");
+  if(sig===tabSig)return;tabSig=sig;tabs.textContent="";
+  [["cur","目前場次"]].concat(batches.slice().reverse().map(b=>[b.id,b.name]),[["all","全部"]]).forEach(([id,name])=>{
+    const b=el("button","tab",name);b.setAttribute("role","tab");b.setAttribute("aria-selected",id===sel);
+    b.onclick=()=>{sel=id;render()};tabs.appendChild(b);
+  });
 }
-let timer=null;
-async function load(){
-  try{
-    const r=await api("triage_scores?select=name,score,correct&order=created_at.desc&limit="+MAX_ROWS,{Prefer:"count=exact"});
-    const rows=await r.json(),m=/\/(\d+)$/.exec(r.headers.get("Content-Range")||"");
-    render(rows,m?Math.max(+m[1],rows.length):rows.length);
-    $("live").classList.remove("off");
-    $("liveTxt").textContent="即時更新 · "+new Date().toLocaleTimeString("zh-TW",{hour12:false});
-  }catch(_){
-    $("live").classList.add("off");$("liveTxt").textContent="讀取不到資料，稍後自動重試";
+function render(){
+  drawTabs();
+  const rows=rowsFor(sel),s=summary(rows);
+  if(!s.n){
+    ["kPlays","kPeople"].forEach(id=>setNum(id,"0"));["kAvg","kMax","kAcc"].forEach(id=>setNum(id,"–"));
+    const msg=sel==="cur"&&batches.length?"這一場還沒有人送出成績。上面可以切換到之前的場次。":"還沒有人玩過。有人送出成績後，這裡會自動出現。";
+    ["chScore","chRight"].forEach(id=>{$(id).textContent="";$(id).appendChild(el("div","empty",msg))});
+    $("subRight").textContent="每一局 10 位傷患中答對幾位";
+  }else{
+    setNum("kPlays",fmt(s.n));setNum("kPeople",fmt(s.people));setNum("kAvg",fmt(s.avg));setNum("kMax",fmt(s.max));
+    setNum("kAcc",String(Math.round(s.acc*100)),"%");
+    const sb=Array.from({length:10},(_,i)=>({n:0,x:i+"k",label:fmt(i*1000)+"–"+fmt(i===9?FULL:i*1000+999)+" 分"}));
+    rows.forEach(r=>sb[Math.min(9,Math.max(0,Math.floor(r.score/1000)))].n++);
+    chart($("chScore"),sb,"得分（k＝千分；最右邊含滿分 10,000）");
+    const rb=Array.from({length:QN+1},(_,i)=>({n:0,x:String(i),label:"答對 "+i+" 位"}));
+    rows.forEach(r=>rb[Math.min(QN,Math.max(0,r.correct))].n++);
+    chart($("chRight"),rb,"答對的傷患數");
+    $("subRight").textContent="每一局 10 位傷患中答對幾位 · 全部答對 "+Math.round(s.full*s.n)+" 局（"+Math.round(s.full*100)+"%）";
   }
-  clearTimeout(timer);timer=setTimeout(load,REFRESH);
+  /* 已封存的場次才顯示得獎名單；目前場次的名次留給頒獎台揭曉 */
+  const b=batches.find(x=>x.id===sel),ws=b&&Array.isArray(b.winners)?b.winners:[];
+  $("winCard").hidden=!ws.length;$("wins").textContent="";
+  ws.forEach(w=>{const d=el("div","win");d.append(el("b","",String(w.rank)),el("span","n",w.name),el("span","s",fmt(w.score)));$("wins").appendChild(d)});
+  drawCompare();
+}
+/* 各場次比較表：一列一場，平均答對率另外畫一條橫條方便一眼比較 */
+function drawCompare(){
+  $("cmpCard").hidden=!hasBatch||(!batches.length&&!all.length);
+  const t=$("cmp");t.textContent="";
+  const head=el("tr");["場次","日期","局數","人數","平均分數","平均答對率","全對比例","最高分",""].forEach((h,i)=>{const th=el("th",i>1&&i<8?"num":"",h);th.scope="col";head.appendChild(th)});
+  t.appendChild(head);
+  const cur=rowsFor("cur");
+  const list=batches.map(b=>({id:b.id,name:b.name,date:dateOf(b.t),rows:rowsFor(b.id)}));
+  if(cur.length||!batches.length)list.push({id:"cur",name:"目前場次",date:"進行中",rows:cur});
+  list.forEach(x=>{
+    const s=summary(x.rows),tr=el("tr",x.id===sel?"on":"");
+    const name=el("th","");name.scope="row";const pick=el("button","pick",x.name);pick.onclick=()=>{sel=x.id;render();window.scrollTo({top:0,behavior:"smooth"})};name.appendChild(pick);
+    const acc=el("td","num acc");
+    if(s.n){const bar=el("span","accbar");bar.appendChild(el("i"));bar.firstChild.style.width=Math.round(s.acc*100)+"%";acc.append(bar,el("span","",Math.round(s.acc*100)+"%"))}else acc.textContent="–";
+    const act=el("td","act");
+    if(x.id!=="cur"){
+      const rn=el("button","mini","改名"),del=el("button","mini","刪除");
+      rn.onclick=()=>renameBatch(x);del.onclick=()=>deleteBatch(x);act.append(rn,del);
+    }
+    tr.append(name,el("td","",x.date),el("td","num",fmt(s.n)),el("td","num",fmt(s.people)),el("td","num",s.n?fmt(s.avg):"–"),acc,
+      el("td","num",s.n?Math.round(s.full*100)+"%":"–"),el("td","num",s.n?fmt(s.max):"–"),act);
+    t.appendChild(tr);
+  });
+  $("archNow").disabled=!cur.length;
+}
+let timer=null,loading=null;
+function load(){
+  if(loading)return loading;
+  return loading=(async()=>{
+    try{
+      await Promise.all([fetchScores(),fetchBatches()]);
+      render();
+      $("live").classList.remove("off");
+      $("liveTxt").textContent="即時更新 · "+new Date().toLocaleTimeString("zh-TW",{hour12:false});
+    }catch(_){
+      $("live").classList.add("off");$("liveTxt").textContent="讀取不到資料，稍後自動重試";
+    }
+    loading=null;clearTimeout(timer);timer=setTimeout(load,REFRESH);
+  })();
 }
 load();
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)load()});
 
+/* ---- 對話框與頒獎密碼 ----
+   寫入資料庫（揭曉、封存、改名、刪除場次）都需要頒獎密碼：資料庫裡還沒有密碼時，第一次輸入的就成為正式密碼。
+   密碼記在這台裝置的 localStorage「triageHostPass」。 */
+let pass="";
+try{pass=localStorage.getItem("triageHostPass")||""}catch(_){}
+function savePass(v){pass=v;try{v?localStorage.setItem("triageHostPass",v):localStorage.removeItem("triageHostPass")}catch(_){}}
+let dlgDone=null;
+function ask(o){
+  $("dlgTitle").textContent=o.title;$("dlgMsg").textContent=o.msg||"";$("dlgMsg").hidden=!o.msg;
+  $("dlgNameL").hidden=$("dlgName").hidden=!o.name;
+  if(o.name){$("dlgNameL").textContent=o.name.label;$("dlgName").value=o.name.value||""}
+  $("dlgPassL").hidden=$("dlgPass").hidden=!o.pass;$("dlgPass").value="";
+  $("dlgPassL").textContent=o.first?"設定頒獎密碼（至少 4 個字，第一次輸入的會成為正式密碼）":"頒獎密碼";
+  $("dlgErr").textContent=o.err||"";$("dlgOk").textContent=o.ok||"確定";
+  $("dlg").classList.add("show");
+  (o.name?$("dlgName"):o.pass?$("dlgPass"):$("dlgOk")).focus();if(o.name)$("dlgName").select();
+  return new Promise(res=>{dlgDone=v=>{$("dlg").classList.remove("show");dlgDone=null;res(v)}});
+}
+$("dlgForm").addEventListener("submit",e=>{
+  e.preventDefault();if(!dlgDone)return;
+  const name=$("dlgName").hidden?"":$("dlgName").value.trim().replace(/\s+/g," ");
+  if(!$("dlgName").hidden&&!name){$("dlgErr").textContent="請輸入名稱。";return}
+  if(!$("dlgPass").hidden){const p=$("dlgPass").value.trim();if(p.length<4){$("dlgErr").textContent="密碼至少要 4 個字。";return}savePass(p)}
+  dlgDone({name:name});
+});
+$("dlgNo").onclick=()=>dlgDone&&dlgDone(null);
+/* 需要密碼的動作：視需要先問名稱／密碼／確認，密碼不對就再問一次。使用者取消時回傳 null。 */
+async function secured(o,call){
+  let err="";
+  for(;;){
+    const need=!pass;let first=false,name=o.name?o.name.value:"";
+    if(need){const st=await rpc("triage_award_state");first=!st.ready}
+    if(need||o.name||o.confirm){
+      const a=await ask(Object.assign({},o,{pass:need,first:first,err:err}));
+      if(!a)return null;
+      name=a.name;if(o.name)o.name.value=name;
+    }
+    try{return{name:name,data:await call(name)}}
+    catch(e){if(/bad_pass|short_pass/.test(e.message)){savePass("");err="密碼不對，請再輸入一次。";continue}throw e}
+  }
+}
+const batchDo=(action,id,name,ws)=>rpc("triage_batch_do",{p_pass:pass,p_action:action,p_id:id||null,p_name:name||null,p_winners:ws||null});
+function note(txt){$("cmpMsg").textContent=txt;if(txt)setTimeout(()=>{if($("cmpMsg").textContent===txt)$("cmpMsg").textContent=""},6000)}
+async function manage(o,call,done){
+  try{const r=await secured(o,call);if(!r)return;await load();note(done(r.name))}
+  catch(_){note("沒有成功，請檢查網路後再試一次。")}
+}
+const defName=()=>dateOf(Date.now())+" 第 "+(batches.length+1)+" 場";
+function renameBatch(x){manage({title:"場次改名",name:{label:"新的名稱",value:x.name}},n=>batchDo("rename",x.id,n),n=>"已改名為「"+n+"」。")}
+function deleteBatch(x){manage({title:"刪除場次「"+x.name+"」？",msg:"成績不會被刪掉，只是不再單獨算一場：這一場的成績會併入下一場（沒有下一場就併回目前場次）。",confirm:true,ok:"刪除"},
+  ()=>batchDo("delete",x.id),()=>"已刪除場次「"+x.name+"」。")}
+$("archNow").onclick=()=>manage({title:"封存目前場次",msg:"不頒獎，直接把目前的成績存成一場，下一場從零開始。",name:{label:"這一場的名稱（例如班級）",value:defName()},ok:"封存"},
+  n=>batchDo("close",null,n),n=>"已封存為「"+n+"」。");
+
 /* ---- 頒獎典禮 ----
-   按「開始頒獎」時抓一次前 5 名並固定名單（之後有人刷新高分也不會變），從第 5 名倒數揭曉到第 1 名。
-   「已領取」只記在這台裝置的 localStorage（triageClaimed），用來提醒自己誰領過了。 */
+   按「開始頒獎」時固定目前場次的前 5 名（之後有人刷新高分也不會變），從第 5 名倒數揭曉到第 1 名。
+   每揭曉一位就把「名單＋已揭曉幾位」寫進資料庫（triage_award_set），手機領獎頁 award.html 只讀得到已揭曉的名次。
+   最後一位揭曉後自動把這一場封存（triage_batch_do close）。「已領取」只記在這台裝置的 localStorage（triageClaimed）。
+   資料庫沒有這些功能（尚未重跑 supabase-setup.sql）時 syncOn=false：頒獎台照常運作，但不同步手機、也不封存。 */
 const MEDAL={1:"🥇",2:"🥈",3:"🥉",4:"🎖️",5:"🎖️"};
-let winners=null,shown=0,claimed={};
+let winners=null,shown=0,claimed={},syncOn=true,queue=Promise.resolve(),batchName="",archived=null,busy=false;
 try{claimed=JSON.parse(localStorage.getItem("triageClaimed")||"{}")||{}}catch(_){}
 const keyOf=w=>w.name+"|"+w.score;
+const pack=ws=>ws.map((w,i)=>({rank:i+1,name:w.name,score:w.score,correct:w.correct,claim:w.claim||null}));
 function saveClaimed(){try{localStorage.setItem("triageClaimed",JSON.stringify(claimed))}catch(_){}}
+function stageMsg(txt){$("stage").textContent="";$("stage").appendChild(el("div","empty",txt));$("cerNext").hidden=true}
 function drawStage(){
-  const st=$("stage");st.textContent="";
-  if(!winners){st.appendChild(el("div","empty","讀取得獎名單中…"));$("cerNext").hidden=true;return}
-  if(!winners.length){st.appendChild(el("div","empty","排行榜上還沒有人，沒辦法頒獎。"));$("cerNext").hidden=true;return}
+  const st=$("stage");
+  if(!winners)return stageMsg("讀取得獎名單中…");
+  if(!winners.length)return stageMsg("這一場還沒有人送出成績，沒辦法頒獎。");
+  st.textContent="";
   /* 畫面由左到右：第 5 名 … 第 1 名，揭曉順序也是這樣 */
   for(let rank=winners.length;rank>=1;rank--){
     const w=winners[rank-1],on=winners.length-rank<shown;
@@ -299,68 +511,61 @@ function drawStage(){
   const left=winners.length-shown,next=$("cerNext");
   next.hidden=!left;if(left)next.textContent="揭曉第 "+left+" 名";
 }
-/* ---- 手機領獎頁同步 ----
-   每揭曉一位，就把「固定的得獎名單＋已揭曉幾位」寫進資料庫（triage_award_set），award.html 只讀得到已揭曉的名次。
-   寫入需要頒獎密碼：資料庫裡還沒有密碼時，第一次輸入的就成為正式密碼。密碼記在這台裝置的 localStorage「triageHostPass」。
-   資料庫沒有這個功能（尚未重跑 supabase-setup.sql）時 syncOn=false，頒獎台照常運作，領獎頁則不等揭曉直接顯示。 */
-let pass="",syncOn=true,queue=Promise.resolve();
-try{pass=localStorage.getItem("triageHostPass")||""}catch(_){}
-function rpc(fn,body){
-  return fetch(SUPABASE_URL+"/rest/v1/rpc/"+fn,{method:"POST",
-    headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify(body||{})})
-    .then(async r=>{
-      if(!r.ok){let m="";try{m=(await r.json()).message||""}catch(_){}const e=new Error(m||"HTTP "+r.status);e.status=r.status;throw e}
-      return r.json()});
-}
 function setSync(k){const e=$("sync");e.className="sync "+k;
   e.textContent={ok:"📱 手機領獎已同步",err:"📱 同步失敗，重試中…",off:"📱 手機領獎未同步（資料庫尚未更新）"}[k]||""}
-function savePass(v){pass=v;try{v?localStorage.setItem("triageHostPass",v):localStorage.removeItem("triageHostPass")}catch(_){}}
-function askPass(first,msg){
-  $("passTitle").textContent=first?"設定頒獎密碼":"輸入頒獎密碼";
-  $("passMsg").textContent=msg||(first?"第一次使用：請設定一組密碼（至少 4 個字）。之後只有知道密碼的人能揭曉名次。":"輸入密碼後才能開始揭曉。");
-  $("passIn").value="";$("cer").classList.add("asking");$("passIn").focus();
+function setArch(){
+  $("arch").hidden=!archived;
+  if(archived)$("archTxt").textContent="✓ 這一場的成績已封存為「"+archived.name+"」，下一場會從零開始。";
 }
-/* 依序送出，避免連按時後送的先到；回傳 false＝密碼不對，已改顯示輸入密碼 */
+/* 依序送出，避免連按時後送的先到；失敗就過一會兒再送一次目前的狀態 */
 function push(){
-  if(!syncOn||!winners)return Promise.resolve(true);
-  return queue=queue.then(async()=>{
-    try{
-      await rpc("triage_award_set",{p_pass:pass,p_revealed:shown,
-        p_winners:winners.map((w,i)=>({rank:i+1,name:w.name,score:w.score,correct:w.correct,claim:w.claim||null}))});
-      setSync("ok");return true;
-    }catch(e){
-      if(/bad_pass|short_pass/.test(e.message)){savePass("");askPass(false,"密碼不對，請再輸入一次。");return false}
-      if(e.status===404){syncOn=false;setSync("off");return true}
-      setSync("err");setTimeout(push,2500);return true;
-    }
+  if(!syncOn||!winners||!winners.length)return;
+  queue=queue.then(async()=>{
+    try{await rpc("triage_award_set",{p_pass:pass,p_revealed:shown,p_winners:pack(winners)});setSync("ok")}
+    catch(e){if(e.status===404){syncOn=false;setSync("off")}else{setSync("err");setTimeout(push,2500)}}
   });
 }
-async function cerLoad(){
-  winners=null;shown=0;$("cer").classList.remove("asking");drawStage();
-  try{
-    if(syncOn&&!pass){
-      let st=null;
-      try{st=await rpc("triage_award_state")}catch(e){if(e.status===404){syncOn=false;setSync("off")}else throw e}
-      if(syncOn){askPass(!(st&&st.ready));return}
-    }
-    const q="&order=score.desc,created_at.asc&limit="+WINNERS;let rows;
-    try{rows=await(await api("triage_leaderboard?select=name,score,correct,claim"+q)).json()}
-    catch(_){rows=await(await api("triage_leaderboard?select=name,score,correct"+q)).json()}
-    winners=rows;
-    if(await push())drawStage();
-  }catch(_){
-    $("stage").textContent="";$("stage").appendChild(el("div","empty","讀取不到排行榜，請檢查網路後按「重新開始」。"));
-  }
+/* 全部揭曉後自動封存這一場 */
+function archive(){
+  if(!syncOn||!hasBatch||archived)return;
+  const name=batchName||defName(),ws=pack(winners);
+  queue=queue.then(async()=>{
+    if(archived)return;
+    try{const r=await batchDo("close",null,name,ws);archived={id:r.id,name:name};setArch();load()}
+    catch(e){$("arch").hidden=false;$("archTxt").textContent="這一場沒有自動封存成功，可以回到統計頁按「封存目前場次」。";$("archUndo").hidden=true}
+  });
 }
-$("passForm").addEventListener("submit",e=>{
-  e.preventDefault();const v=$("passIn").value.trim();
-  if(v.length<4){$("passMsg").textContent="密碼至少要 4 個字。";return}
-  savePass(v);cerLoad();
-});
+async function undoArchive(){
+  if(!archived)return;
+  await queue;await batchDo("delete",archived.id);archived=null;setArch();await load();
+}
+async function cerLoad(redo){
+  if(busy)return;busy=true;
+  winners=null;shown=0;$("archUndo").hidden=false;drawStage();
+  try{
+    /* 「重新開始」＝這一場重來：先把剛剛自動封存的場次取消，成績才會回到目前場次。
+       頒完獎之後又有新成績、再按「開始頒獎」＝下一場：保留封存，重新問場次名稱。 */
+    if(archived){if(redo)await undoArchive();else{archived=null;batchName=""}}
+    setArch();
+    await load();
+    if(syncOn){try{await rpc("triage_award_state")}catch(e){if(e.status===404){syncOn=false;setSync("off")}else throw e}}
+    const top=topOf(rowsFor("cur"),WINNERS);
+    if(syncOn&&top.length){
+      const r=await secured({title:"開始頒獎",ok:"開始",
+        msg:hasBatch?"全部揭曉後，這一場的成績會自動封存，下一場從零開始。":"",
+        name:hasBatch?{label:"這一場的名稱（例如班級）",value:batchName||defName()}:null},
+        n=>rpc("triage_award_set",{p_pass:pass,p_revealed:0,p_winners:pack(top)}));
+      if(!r){busy=false;$("cer").classList.remove("show");return}
+      batchName=r.name;setSync("ok");
+    }
+    winners=top;drawStage();if(top.length)$("cerNext").focus();
+  }catch(_){stageMsg("讀取不到資料，請檢查網路後按「重新開始」。")}
+  busy=false;
+}
 function reveal(){
-  if(!winners||shown>=winners.length||$("cer").classList.contains("asking"))return;
+  if(!winners||shown>=winners.length||busy||$("dlg").classList.contains("show"))return;
   shown++;drawStage();push();
-  if(shown===winners.length)confetti();
+  if(shown===winners.length){confetti();archive()}
 }
 function confetti(){
   if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;
@@ -375,12 +580,18 @@ function confetti(){
   setTimeout(()=>{box.textContent=""},5600);
 }
 const cerOn=()=>$("cer").classList.contains("show");
-$("cerOpen").onclick=()=>{$("cer").classList.add("show");if(!winners)cerLoad();else $("cerNext").focus()};
+$("cerOpen").onclick=()=>{
+  $("cer").classList.add("show");
+  const next=archived&&rowsFor("cur").length>0;
+  if(!winners||!winners.length||next)cerLoad(false);else $("cerNext").focus();
+};
 $("cerClose").onclick=()=>$("cer").classList.remove("show");
-$("cerReset").onclick=cerLoad;
+$("cerReset").onclick=()=>cerLoad(true);
 $("cerNext").onclick=reveal;
+$("archUndo").onclick=async()=>{try{await undoArchive()}catch(_){$("archTxt").textContent="取消封存沒有成功，請再試一次。";$("arch").hidden=false}};
 /* 簡報筆／鍵盤：→ 或 PageDown 揭曉下一位，Esc 回到統計（空白鍵、Enter 由按鈕本身處理） */
 document.addEventListener("keydown",e=>{
+  if($("dlg").classList.contains("show")){if(e.key==="Escape"&&dlgDone)dlgDone(null);return}
   if(!cerOn())return;
   if(e.key==="Escape")$("cer").classList.remove("show");
   else if(e.key==="ArrowRight"||e.key==="PageDown"){e.preventDefault();reveal()}

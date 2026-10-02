@@ -1153,12 +1153,16 @@ function lbFetch(path,opt){
     .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r});
 }
 function lbNote(el,txt){el.textContent="";const d=document.createElement("div");d.className="empty";d.textContent=txt;el.appendChild(d)}
-/* 完美救護員：最先「10 位全部答對」的 LB_TOP 位（同一個暱稱只算最早的那一次），依達成時間排序。
+/* 完美救護員：這一場最先「10 位全部答對」的 LB_TOP 位（同一個暱稱只算最早的那一次），依達成時間排序。
    刻意不顯示分數排名——前 5 名留到報告時在 stats.html 頒獎揭曉。 */
 async function lbLoad(el){
   lbNote(el,"讀取中…");
   try{
-    const all=await(await lbFetch("triage_scores?select=name,created_at&correct=eq."+LB_FULL+"&order=created_at.asc&limit=500")).json();
+    /* 只算「目前場次」：上一場頒獎（封存）之後送出的成績。資料庫還沒有場次表時就不分場次。 */
+    let since="";
+    try{const b=await(await lbFetch("triage_batch?select=ended_at&order=ended_at.desc&limit=1")).json();
+      if(b.length)since="&created_at=gt."+encodeURIComponent(b[0].ended_at)}catch(_){}
+    const all=await(await lbFetch("triage_scores?select=name,created_at&correct=eq."+LB_FULL+since+"&order=created_at.asc&limit=500")).json();
     const seen=new Set(),rows=[];
     for(const r of all){if(seen.has(r.name))continue;seen.add(r.name);rows.push(r);if(rows.length>=LB_TOP)break}
     if(!rows.length){lbNote(el,"還沒有人全部答對，快來當第一位完美救護員！");return}
