@@ -1340,7 +1340,10 @@ const TUT=[
 ];
 TUT.forEach(x=>x.c=Object.assign({},TUT_BASE,x.c));
 const TUT_DIR={red:[1,0,"0deg"],green:[-1,0,"180deg"],yellow:[0,-1,"-90deg"],black:[0,1,"90deg"]};
-function tutSeen(){try{return localStorage.getItem("triageTut")==="1"}catch(_){return false}}
+let tutMem=false; /* localStorage 不能用時（無痕模式等），至少這次開啟期間記得 */
+function tutSeen(){try{return tutMem||localStorage.getItem("triageTut")==="1"}catch(_){return tutMem}}
+/* 首頁主按鈕：還沒做過教學時是「開始新手教學」，做過（或跳過）之後變成「開始檢傷」 */
+function goLabel(){$("go").textContent=tutSeen()?"開始檢傷":"開始新手教學"}
 function tutWant(){return TUT[tut.pi].steps[tut.si]||"swipe"}
 function tutClear(){document.querySelectorAll(".tut-on").forEach(e=>e.classList.remove("tut-on"));$("tutSwipe").hidden=true;$("scene").classList.remove("tut-demo")}
 function tutStart(play){
@@ -1371,14 +1374,16 @@ function tutAnswer(choice){
 }
 function tutExit(){
   tut=null;tutClear();document.body.classList.remove("tut");$("progK").textContent="傷患";
-  try{localStorage.setItem("triageTut","1")}catch(_){}
+  tutMem=true;try{localStorage.setItem("triageTut","1")}catch(_){}
+  goLabel();
 }
 document.querySelectorAll(".snd").forEach(b=>b.onclick=()=>setMute(!muted));setMute(muted,true);
 $("tutOpen").onclick=()=>tutStart(false);
 $("tutAgain").onclick=()=>tutStart(true);
 $("tutPlay").onclick=()=>{$("tutDone").classList.remove("show");show("start")};
 $("tutSkip").onclick=()=>{const play=tut&&tut.play;tutExit();if(play)startGame();else show("start")};
-/* 第一次按「開始檢傷」先帶一次教學，之後直接開始 */
+/* 第一次主按鈕是「開始新手教學」，做完之後才變成「開始檢傷」直接開始 */
+goLabel();
 $("go").onclick=()=>tutSeen()?startGame():tutStart(true);$("again").onclick=startGame;$("next").onclick=next;
 $("rules").onclick=()=>show("start");
 </script>
