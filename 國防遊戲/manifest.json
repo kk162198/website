@@ -1,0 +1,32 @@
+{
+  "name": "檢傷分類：滑動救援",
+  "short_name": "檢傷分類",
+  "description": "大量傷患現場，用 START 檢傷法在 20 秒內判斷每位傷患，滑動分到綠、黃、紅、黑四種檢傷卡。",
+  "lang": "zh-Hant",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#3a4130",
+  "theme_color": "#3a4130",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
