@@ -266,6 +266,19 @@ body.playing .book{display:flex}
 .snd-g{width:48px;border:2px solid rgba(239,228,200,.45);background:transparent;color:var(--ink-on-field);border-radius:12px}
 .snd[aria-pressed="false"]{opacity:.6}
 body.tut .snd-g{opacity:.35}
+/* 暫停：按鈕在音效開關右邊；暫停時整個畫面蓋住（看不到傷患），計時停止 */
+.pz-b{flex:none;width:48px;padding:0;display:grid;place-items:center;border:2px solid rgba(239,228,200,.45);background:transparent;color:var(--ink-on-field);border-radius:12px}
+.pz-b svg{width:18px;height:18px;fill:currentColor}
+body.tut .pz-b{display:none}
+.pz{position:fixed;inset:0;z-index:25;background:var(--field);display:none;align-items:center;justify-content:center;
+  padding:calc(var(--sat) + 20px) calc(var(--sar) + 20px) calc(var(--sab) + 20px) calc(var(--sal) + 20px)}
+.pz.show{display:flex}
+.pz-box{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.pz-box h2{margin:0;font-size:1.9rem;font-weight:900}
+.pz-info{margin:0;font-family:var(--num);font-weight:700;font-size:1.05rem}
+.pz-note{margin:0 0 10px;font-size:.9rem;color:var(--muted-on-field)}
+.pz-box .primary{margin:0}
+.pz-box .ghost{flex:none;width:100%}
 @media (max-height:640px){.shout-row{margin-bottom:6px}}
 
 /* 答對回饋與連續答對 */
@@ -503,6 +516,7 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
   <div class="shout-row">
     <button class="shout" id="shout">📢 喊話：「能走的人請走過來！」</button>
     <button class="snd snd-g" id="sndGame" type="button"></button>
+    <button class="pz-b" id="pauseBtn" type="button" aria-label="暫停"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="2" width="4.5" height="14" rx="1.2"/><rect x="10.5" y="2" width="4.5" height="14" rx="1.2"/></svg></button>
   </div>
 
   <div class="scene" id="scene">
@@ -557,6 +571,16 @@ body.tut .tut-swipe:not([hidden]){display:block;position:absolute;left:0;right:0
   </div></div>
 </section>
 
+<div class="pz" id="pause" role="dialog" aria-modal="true" aria-labelledby="pzT">
+  <div class="pz-box">
+    <h2 id="pzT">已暫停</h2>
+    <p class="pz-info" id="pzInfo"></p>
+    <p class="pz-note">計時已停止，準備好再繼續。</p>
+    <button class="primary" id="pzGo">▶ 繼續</button>
+    <button class="ghost" id="pzAgain">↻ 重新開始</button>
+    <button class="ghost" id="pzHome">⌂ 回到主頁</button>
+  </div>
+</div>
 <button class="tut-skip" id="tutSkip">跳過教學 ›</button>
 <div class="book-shade" id="bookShade"></div>
 <aside class="book" id="book" aria-label="檢傷手冊">
@@ -992,7 +1016,7 @@ function deal(){
   runTimer();
 }
 /* 用實際經過時間計時：切到背景（來電、通知）時自動暫停，回來再繼續 */
-let lastTs=0,lastSec=LIMIT;
+let lastTs=0,lastSec=LIMIT,paused=false;
 function runTimer(){
   clearInterval(timer);lastTs=performance.now();
   timer=setInterval(()=>{
@@ -1010,12 +1034,26 @@ function tick(){
 document.addEventListener("visibilitychange",()=>{
   if(!$("game").classList.contains("active"))return;
   if(document.hidden)clearInterval(timer);
-  else{keepAwake(true);if(!locked&&!tut)runTimer()}
+  else{keepAwake(true);if(!locked&&!tut&&!paused)runTimer()}
 });
+/* 暫停：停止計時並蓋住畫面。作答後的回饋畫面本來就不計時，不需要暫停 */
+function pause(on){
+  if(on){
+    if(paused||locked||tut||!$("game").classList.contains("active"))return;
+    paused=true;clearInterval(timer);book(false);
+    $("scene").style.transform="";$("stamp").style.opacity=0;
+    $("pzInfo").textContent=`第 ${idx+1}/${deck.length} 位傷患 · 剩 ${Math.ceil(Math.max(t,0))} 秒 · ${score} 分`;
+    $("pause").classList.add("show");$("pzGo").focus({preventScroll:true});
+  }else{
+    if(!paused)return;
+    paused=false;$("pause").classList.remove("show");
+  }
+}
+function resume(){if(!paused)return;pause(false);if(!locked&&!document.hidden)runTimer()}
 function markChecked(act){const g=document.querySelector(`.hs[data-act="${act}"]`);if(g)g.classList.add("checked")}
 
 function act(a){
-  if(locked)return; const p=cur;
+  if(locked||paused)return; const p=cur;
   if(tut&&a!==tutWant())return; /* 教學中只接受目前指示的那一步 */
   buzz(8);sfx.tap();
   const before={};["walk","breath","circ","mind"].forEach(k=>before[k]=$("l-"+k).textContent);
@@ -1068,7 +1106,7 @@ function act_(a,p){
 function addCirc(s){const d=$("l-circ");const cur_=d.textContent==="—"?[]:d.textContent.split("｜");if(!cur_.some(x=>x.split("：")[0]===s.split("：")[0]))cur_.push(s);d.textContent=cur_.join("｜")}
 
 function answer(choice){
-  if(locked)return;if(tut){tutAnswer(choice);return}
+  if(locked||paused)return;if(tut){tutAnswer(choice);return}
   locked=true;book(false);clearInterval(timer);
   const {a,need}=start_(cur),ok=choice===a;
   const missed=need.filter(n=>!done.has(n));
@@ -1238,7 +1276,7 @@ function up(e){
   if(!moved){if(target)act(target);return}
   const dx=e.clientX-sx,dy=e.clientY-sy,v=Math.hypot(dx,dy)/Math.max(1,performance.now()-st);
   const d=dirOf(dx,dy)||(v>.6?dirOf(dx,dy,true):null);
-  if(d)answer(d);else{scene.style.transform="";stamp.style.opacity=0}
+  if(d&&!paused)answer(d);else{scene.style.transform="";stamp.style.opacity=0}
 }
 scene.addEventListener("pointerup",up);
 scene.addEventListener("pointercancel",()=>{clearTap();if(down){down=false;scene.classList.remove("dragging");scene.style.transform="";stamp.style.opacity=0}});
@@ -1248,14 +1286,19 @@ $("shout").onclick=()=>act("walk");
 $("airway").onclick=()=>act("airway");
 document.querySelectorAll(".btns button").forEach(b=>b.addEventListener("click",()=>answer(b.dataset.c)));
 document.addEventListener("keydown",e=>{
+  if(paused){if(e.key==="Escape"||e.key==="p"||e.key==="P"){e.preventDefault();resume()}return}
   if($("book").classList.contains("open")){if(e.key==="Escape")book(false);return}
   if((e.key==="h"||e.key==="H")&&!tut&&$("game").classList.contains("active")){book(true);return}
   if($("fb").classList.contains("show")){if(e.key==="Enter"||e.key===" "){e.preventDefault();next()}return}
   if(!$("game").classList.contains("active")||locked)return;
+  if(e.key==="Escape"||e.key==="p"||e.key==="P"){e.preventDefault();pause(true);return}
   const m={ArrowRight:"red",ArrowLeft:"green",ArrowUp:"yellow",ArrowDown:"black"}[e.key];
   if(m){e.preventDefault();answer(m)}
 });
 $("bookShade").onclick=()=>book(false);$("bookClose").onclick=()=>book(false);
+$("pauseBtn").onclick=()=>pause(true);$("pzGo").onclick=resume;
+$("pzAgain").onclick=()=>{pause(false);startGame()};
+$("pzHome").onclick=()=>{pause(false);clearInterval(timer);show("start")};
 /* 檢傷手冊沿用首頁的 START 流程圖：只維護一份，改首頁那張兩邊都會更新 */
 (()=>{const src=document.querySelector("#start .flowchart"),slot=$("bookFlow");if(!src||!slot)return;
   const c=src.cloneNode(true),m=c.querySelector("marker");
